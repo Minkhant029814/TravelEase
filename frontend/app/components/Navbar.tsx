@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 
 import {
   MenuIcon,
@@ -11,9 +11,12 @@ import {
   HelpCircleIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { AppHook } from "@/context/AppProvider";
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // This would come from your auth context in a real app
+  // const [isLoggedIn, setIsLoggedIn] = useState(true); // This would come from your auth context in a real app
+  const { logout, authToken } = AppHook();
+
   return (
     <nav className="bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -53,7 +56,7 @@ const Navbar = () => {
             </div>
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
-            {isLoggedIn ? (
+            {authToken ? (
               <>
                 <Link
                   href="/reservations"
@@ -68,6 +71,10 @@ const Navbar = () => {
                   <UserIcon className="h-5 w-5 mr-1" />
                   Dashboard
                 </Link>
+
+                <button className="bg-red-800" onClick={logout}>
+                  logout
+                </button>
               </>
             ) : (
               <>
@@ -130,7 +137,7 @@ const Navbar = () => {
             </Link>
           </div>
           <div className="pt-4 pb-3 border-t border-gray-200">
-            {isLoggedIn ? (
+            {authToken ? (
               <div className="space-y-1">
                 <Link
                   href="/reservations"

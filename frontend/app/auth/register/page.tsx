@@ -1,22 +1,44 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { UserIcon, MailIcon, LockIcon, GlobeIcon } from "lucide-react";
 import Link from "next/link";
+import { register } from "@/app/types/UserAuth";
+import { AppHook } from "@/context/AppProvider";
+import { useRouter } from "next/navigation";
+
 const Register = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    // In a real app, this would register with your backend
-    console.log("Register attempt with:", {
-      name,
-      email,
-      password,
-      agreeTerms,
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [formData, SetFormData] = useState<register>({
+    name: "",
+    email: "",
+    password: "",
+    role: "",
+  });
+  const { register, authToken } = AppHook();
+  const router = useRouter();
+  useEffect(() => {
+    if (authToken) {
+      router.push("/");
+    }
+  }, [authToken]);
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      await register(
+        formData.name,
+        formData.email,
+        formData.password,
+        formData.role
+      );
+    } catch (error: any) {
+      setErrorMsg(error);
+    }
+  };
+  const handeOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    SetFormData({
+      ...formData,
+      [event.target.name]: event.target.value,
     });
   };
   return (
@@ -60,8 +82,8 @@ const Register = () => {
                   required
                   className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
                   placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={formData.name}
+                  onChange={handeOnChange}
                 />
               </div>
             </div>
@@ -84,8 +106,8 @@ const Register = () => {
                   required
                   className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
                   placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={formData.email}
+                  onChange={handeOnChange}
                 />
               </div>
             </div>
@@ -107,8 +129,8 @@ const Register = () => {
                   autoComplete="new-password"
                   required
                   className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={formData.password}
+                  onChange={handeOnChange}
                 />
               </div>
               <p className="mt-1 text-xs text-gray-500">
@@ -117,67 +139,22 @@ const Register = () => {
               </p>
             </div>
             <div>
-              <label
-                htmlFor="confirm-password"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Confirm password
-              </label>
-              <div className="mt-1 relative rounded-md shadow-sm">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LockIcon className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="confirm-password"
-                  name="confirm-password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-              </div>
-              {confirmPassword && password !== confirmPassword && (
-                <p className="mt-1 text-xs text-red-500">
-                  Passwords do not match.
-                </p>
-              )}
-            </div>
-            <div className="flex items-center">
-              <input
-                id="agree-terms"
-                name="agree-terms"
-                type="checkbox"
+              <label className="block text-sm font-medium mb-1">Role</label>
+              <select
+                name="role"
+                className="w-full border rounded px-3 py-2"
+                value={formData.role}
+                onChange={handeOnChange}
                 required
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                checked={agreeTerms}
-                onChange={(e) => setAgreeTerms(e.target.checked)}
-              />
-              <label
-                htmlFor="agree-terms"
-                className="ml-2 block text-sm text-gray-900"
               >
-                I agree to the{" "}
-                <Link
-                  href="/terms"
-                  className="font-medium text-blue-600 hover:text-blue-500"
-                >
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link
-                  href="/privacy"
-                  className="font-medium text-blue-600 hover:text-blue-500"
-                >
-                  Privacy Policy
-                </Link>
-              </label>
+                <option value="">Select role</option>
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
             </div>
             <div>
               <button
                 type="submit"
-                disabled={password !== confirmPassword}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
                 Create account
