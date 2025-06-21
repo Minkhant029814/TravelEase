@@ -9,7 +9,12 @@ interface AppProviderType {
   isLoading: Boolean;
   authToken: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (
+    name: string,
+    email: string,
+    password: string,
+    role: string
+  ) => Promise<void>;
   logout: () => void;
 }
 
@@ -26,7 +31,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     if (token) {
       setAuthToken(token);
     } else {
-      router.push("auth/login");
+      router.push("/auth/login");
     }
   }, []);
 
@@ -41,7 +46,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
       if (response.data.status) {
         Cookies.set("authToken", response.data.token, { expires: 7 });
         setAuthToken(response.data.token);
-        router.push("/dashboard");
+        router.push("/userDashboard");
       }
     } catch (error) {
       console.log(error);
@@ -50,13 +55,19 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (
+    name: string,
+    email: string,
+    password: string,
+    role: string
+  ) => {
     setIsLoading(true);
     try {
       const response = await axios.post(`${API_URL}/auth/register`, {
         name,
         email,
         password,
+        role,
       });
       console.log(response);
       if (response.data.status) {

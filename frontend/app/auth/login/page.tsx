@@ -1,24 +1,46 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { MailIcon, LockIcon, GlobeIcon } from "lucide-react";
 import Link from "next/link";
+import { login } from "@/app/types/UserAuth";
+import { AppHook } from "@/context/AppProvider";
+import { useRouter } from "next/navigation";
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  //form submit
+  const [formdata, setFormdata] = useState<login>({
+    email: "",
+    password: "",
+  });
+  const [error, setError] = useState<Boolean>(false);
+
+  const { login, authToken } = AppHook();
+  const router = useRouter();
+  useEffect(() => {
+    if (authToken) {
+      router.push("/");
+    }
+  }, [authToken]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // In a real app, this would authenticate with your backend
-    console.log("Login attempt with:", {
-      email,
-      password,
-      rememberMe,
+    try {
+      await login(formdata.email, formdata.password);
+    } catch (error: any) {
+      setError(true);
+    }
+  };
+
+  const handeOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormdata({
+      ...formdata,
+      [e.target.name]: e.target.value,
     });
   };
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        {error && <div className="text-red-500"> Invalide user</div>}
         <div className="flex justify-center">
           <GlobeIcon className="h-12 w-12 text-blue-600" />
         </div>
@@ -57,8 +79,8 @@ const Login = () => {
                   required
                   className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
                   placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={formdata.email}
+                  onChange={handeOnChange}
                 />
               </div>
             </div>
@@ -80,12 +102,12 @@ const Login = () => {
                   autoComplete="current-password"
                   required
                   className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={formdata.password}
+                  onChange={handeOnChange}
                 />
               </div>
             </div>
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <input
                   id="remember-me"
@@ -110,7 +132,7 @@ const Login = () => {
                   Forgot your password?
                 </Link>
               </div>
-            </div>
+            </div> */}
             <div>
               <button
                 type="submit"

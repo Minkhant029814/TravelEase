@@ -1,82 +1,75 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-import { MapPinIcon, SearchIcon, FilterIcon, SortAscIcon } from "lucide-react";
+import {
+  MapPinIcon,
+  SearchIcon,
+  FilterIcon,
+  SortAscIcon,
+  Cookie,
+} from "lucide-react";
 import Link from "next/link";
-const destinationsData = [
-  {
-    id: 1,
-    name: "Bali, Indonesia",
-    description:
-      "Tropical paradise with beautiful beaches and rich cultural heritage.",
-    image:
-      "https://images.unsplash.com/photo-1537996194471-e657df975ab4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1738&q=80",
-    activities: ["Beach", "Cultural", "Temples"],
-  },
-  {
-    id: 2,
-    name: "Paris, France",
-    description: "The city of lights known for romance, art, and cuisine.",
-    image:
-      "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1742&q=80",
-    activities: ["Museums", "Food", "Architecture"],
-  },
-  {
-    id: 3,
-    name: "Kyoto, Japan",
-    description: "Ancient temples, traditional gardens, and cherry blossoms.",
-    image:
-      "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80",
-    activities: ["Temples", "Gardens", "Cultural"],
-  },
-  {
-    id: 4,
-    name: "Santorini, Greece",
-    description: "Stunning coastal views and vibrant Mediterranean culture.",
-    image:
-      "https://images.unsplash.com/photo-1530841377377-3ff06c0ca713?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80",
-    activities: ["Beach", "Scenery", "Relaxation"],
-  },
-  {
-    id: 5,
-    name: "New York City, USA",
-    description:
-      "The city that never sleeps, filled with iconic landmarks and diverse cultures.",
-    image:
-      "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80",
-    activities: ["City", "Museums", "Shopping"],
-  },
-  {
-    id: 6,
-    name: "Machu Picchu, Peru",
-    description: "Ancient Incan citadel set high in the Andes Mountains.",
-    image:
-      "https://images.unsplash.com/photo-1526392060635-9d6019884377?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80",
-    activities: ["Hiking", "Historical", "Adventure"],
-  },
-];
+import axios from "axios";
+import Cookies from "js-cookie";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 const Destinations = () => {
+  const [destinationsData, setDestinationsData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedActivities, setSelectedActivities] = useState([]);
+  const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("name");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = Cookies.get("authToken");
+    const fetchDestinations = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/destinations`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log(res.data);
+
+        const data = res.data.map((dest: any) => ({
+          id: dest.id,
+          name: dest.name,
+          description: dest.description,
+          image: dest.image
+            ? `${API_URL?.replace("/api", "")}/storage/${dest.image}`
+            : "https://via.placeholder.com/400x250?text=No+Image",
+          activities: dest.activities
+            ? dest.activities.map((a: any) => a.name)
+            : [],
+        }));
+        setDestinationsData(data);
+      } catch (error) {
+        setDestinationsData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDestinations();
+  }, []);
+
   const allActivities = [
-    ...new Set(destinationsData.flatMap((dest) => dest.activities)),
+    ...new Set(destinationsData.flatMap((dest: any) => dest.activities)),
   ];
   const filteredDestinations = destinationsData
     .filter(
-      (destination) =>
+      (destination: any) =>
         destination.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         destination.description.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .filter(
-      (destination) =>
+      (destination: any) =>
         selectedActivities.length === 0 ||
-        destination.activities.some((activity) =>
+        destination.activities.some((activity: string) =>
           selectedActivities.includes(activity)
         )
     )
-    .sort((a, b) => a[sortBy].localeCompare(b[sortBy]));
-  const handleActivityToggle = (activity) => {
+    .sort((a: any, b: any) => a[sortBy].localeCompare(b[sortBy]));
+  const handleActivityToggle = (activity: string) => {
     setSelectedActivities((prev) =>
       prev.includes(activity)
         ? prev.filter((a) => a !== activity)
@@ -179,7 +172,7 @@ const Destinations = () => {
               </h2>
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredDestinations.map((destination) => (
+              {filteredDestinations.map((destination: any) => (
                 <Link
                   key={destination.id}
                   href={`/destinations/${destination.id}`}
@@ -203,7 +196,7 @@ const Destinations = () => {
                       {destination.description}
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {destination.activities.map((activity) => (
+                      {destination.activities.map((activity: string) => (
                         <span
                           key={activity}
                           className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"

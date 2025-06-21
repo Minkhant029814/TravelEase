@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 class DestinationController extends Controller
 {
     public function index() : JsonResponse {
-        return response()->json(Destination::with('user')->get());
+        return response()->json(Destination::with('user','activities')->get());
     }
     public function store(Request $request) : JsonResponse {
         
@@ -31,7 +31,7 @@ class DestinationController extends Controller
     }
 
     public function show($id) : JsonResponse {
-        return response()->json(Destination::with('user')->findOrFail($id));
+        return response()->json(Destination::with('user','activities')->findOrFail($id));
         
     }
 
