@@ -1,38 +1,62 @@
+import api from "@/lib/api";
+import { constants } from "buffer";
 import { MapPinIcon } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const FeaturedDestinations = () => {
-  const destinations = [
-    {
-      id: 1,
-      name: "Bali, Indonesia",
-      description:
-        "Tropical paradise with beautiful beaches and rich cultural heritage.",
-      image:
-        "https://images.unsplash.com/photo-1537996194471-e657df975ab4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1738&q=80",
-    },
-    {
-      id: 2,
-      name: "Paris, France",
-      description: "The city of lights known for romance, art, and cuisine.",
-      image:
-        "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1742&q=80",
-    },
-    {
-      id: 3,
-      name: "Kyoto, Japan",
-      description: "Ancient temples, traditional gardens, and cherry blossoms.",
-      image:
-        "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80",
-    },
-    {
-      id: 4,
-      description: "Stunning coastal views and vibrant Mediterranean culture.",
-      name: "Santorini, Greece",
-      image:
-        "https://images.unsplash.com/photo-1530841377377-3ff06c0ca713?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80",
-    },
-  ];
+  // const destinations = [
+  //   {
+  //     id: 1,
+  //     name: "Bali, Indonesia",
+  //     description:
+  //       "Tropical paradise with beautiful beaches and rich cultural heritage.",
+  //     image:
+  //       "https://images.unsplash.com/photo-1537996194471-e657df975ab4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1738&q=80",
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Paris, France",
+  //     description: "The city of lights known for romance, art, and cuisine.",
+  //     image:
+  //       "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1742&q=80",
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "Kyoto, Japan",
+  //     description: "Ancient temples, traditional gardens, and cherry blossoms.",
+  //     image:
+  //       "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80",
+  //   },
+  //   {
+  //     id: 4,
+  //     description: "Stunning coastal views and vibrant Mediterranean culture.",
+  //     name: "Santorini, Greece",
+  //     image:
+  //       "https://images.unsplash.com/photo-1530841377377-3ff06c0ca713?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80",
+  //   },
+  // ];
+
+  const [destinations, setDestinations] = useState<any>([]);
+  const [loading, setLoading] = useState<Boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    const fetchDestinations = async () => {
+      try {
+        setLoading(true);
+        const response = await api.getDestinations();
+        setDestinations(response.data);
+        console.log(response.data);
+      } catch (error) {
+        setError("Failed to load destinations. Please try again later.");
+        console.error("Error fetching destinations:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDestinations();
+  }, []);
+
   return (
     <div className="bg-white py-12 sm:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -46,7 +70,7 @@ const FeaturedDestinations = () => {
           </p>
         </div>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {destinations.map((destination) => (
+          {destinations.map((destination: any) => (
             <Link
               key={destination.id}
               href={`/destinations/${destination.id}`}

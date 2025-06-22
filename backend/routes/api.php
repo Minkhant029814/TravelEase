@@ -24,10 +24,13 @@ Route::post('auth/login', [SimpleAuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('auth/logout', [SimpleAuthController::class, 'logout']);
-
+    Route::get('auth/me',SimpleAuthController::class);
     Route::post('oauth/logout', [AuthController::class, 'logout']);
 
     Route::apiResource('users', UserController::class);
+    // Route::put('/user/profile',[UserController::class,'updateProfile']);
+    // Route::post('/user/profile/picture',[UserController::class,'updateprofilePicture']);
+
     Route::apiResource('roles', RoleController::class);
     Route::post('users/{user}/roles/{role}', [UserRoleController::class, 'attach']);
     Route::apiResource('destinations', DestinationController::class);

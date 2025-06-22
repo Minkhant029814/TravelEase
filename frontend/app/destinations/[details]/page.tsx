@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -12,71 +12,98 @@ import {
   HeartIcon,
 } from "lucide-react";
 
-const destinationsData = {
-  1: {
-    id: 1,
-    name: "Bali, Indonesia",
-    description:
-      "Tropical paradise with beautiful beaches and rich cultural heritage.",
-    longDescription:
-      "Bali is an Indonesian island known for its forested volcanic mountains, iconic rice paddies, beaches and coral reefs. The island is home to religious sites such as cliffside Uluwatu Temple. To the south, the beachside city of Kuta has lively bars, while Seminyak, Sanur and Nusa Dua are popular resort towns. The island is also known for its yoga and meditation retreats.",
-    image:
-      "https://images.unsplash.com/photo-1537996194471-e657df975ab4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1738&q=80",
-    activities: [
-      {
-        id: 1,
-        name: "Beach Day at Kuta",
-        description:
-          "Relax on the famous Kuta Beach with golden sands and surfing opportunities.",
-        image:
-          "https://images.unsplash.com/photo-1588625500633-a0cd518f0f60?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80",
-      },
-      {
-        id: 2,
-        name: "Ubud Monkey Forest",
-        description:
-          "Visit the sacred sanctuary with over 700 monkeys and ancient temples.",
-        image:
-          "https://images.unsplash.com/photo-1584555613483-3b107aa8ba23?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80",
-      },
-      {
-        id: 3,
-        name: "Tegallalang Rice Terraces",
-        description:
-          "Explore the stunning stepped rice fields using traditional Balinese irrigation.",
-        image:
-          "https://images.unsplash.com/photo-1558005530-a7958896ec60?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1742&q=80",
-      },
-    ],
-    reviews: [
-      {
-        id: 1,
-        user: "Sarah M.",
-        rating: 5,
-        comment:
-          "Absolutely stunning! The beaches were pristine and the locals were so friendly.",
-        date: "2 months ago",
-      },
-      {
-        id: 2,
-        user: "James L.",
-        rating: 4,
-        comment:
-          "Beautiful island with so much to see. The traffic can be challenging though.",
-        date: "5 months ago",
-      },
-    ],
-  },
-  // More destinations would be here in a real app
-};
-
+// const destinationsData = {
+//   1: {
+//     id: 1,
+//     name: "Bali, Indonesia",
+//     description:
+//       "Tropical paradise with beautiful beaches and rich cultural heritage.",
+//     longDescription:
+//       "Bali is an Indonesian island known for its forested volcanic mountains, iconic rice paddies, beaches and coral reefs. The island is home to religious sites such as cliffside Uluwatu Temple. To the south, the beachside city of Kuta has lively bars, while Seminyak, Sanur and Nusa Dua are popular resort towns. The island is also known for its yoga and meditation retreats.",
+//     image:
+//       "https://images.unsplash.com/photo-1537996194471-e657df975ab4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1738&q=80",
+//     activities: [
+//       {
+//         id: 1,
+//         name: "Beach Day at Kuta",
+//         description:
+//           "Relax on the famous Kuta Beach with golden sands and surfing opportunities.",
+//         image:
+//           "https://images.unsplash.com/photo-1588625500633-a0cd518f0f60?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80",
+//       },
+//       {
+//         id: 2,
+//         name: "Ubud Monkey Forest",
+//         description:
+//           "Visit the sacred sanctuary with over 700 monkeys and ancient temples.",
+//         image:
+//           "https://images.unsplash.com/photo-1584555613483-3b107aa8ba23?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80",
+//       },
+//       {
+//         id: 3,
+//         name: "Tegallalang Rice Terraces",
+//         description:
+//           "Explore the stunning stepped rice fields using traditional Balinese irrigation.",
+//         image:
+//           "https://images.unsplash.com/photo-1558005530-a7958896ec60?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1742&q=80",
+//       },
+//     ],
+//     reviews: [
+//       {
+//         id: 1,
+//         user: "Sarah M.",
+//         rating: 5,
+//         comment:
+//           "Absolutely stunning! The beaches were pristine and the locals were so friendly.",
+//         date: "2 months ago",
+//       },
+//       {
+//         id: 2,
+//         user: "James L.",
+//         rating: 4,
+//         comment:
+//           "Beautiful island with so much to see. The traffic can be challenging though.",
+//         date: "5 months ago",
+//       },
+//     ],
+//   },
+//   // More destinations would be here in a real app
+// };
+import api from "@/lib/api";
 const DestinationDetail = () => {
   const params = useParams();
   const id = params?.details as string;
+  const [destination, setDestination] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState("");
   const [travelers, setTravelers] = useState(2);
   // In a real app, we'd fetch this data from an API based on the ID
-  const destination = destinationsData[id];
+
+  // const getImageUrl = (imagePath: string) => {
+  //   if (!imagePath) return "/placeholder.jpg";
+  //   if (imagePath.startsWith("http")) return imagePath;
+  //   return `http://localhost:8000/${imagePath}`;
+  // };
+
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    api
+      .getDestination(Number(id))
+      .then((res) => setDestination(res.data))
+      .catch(() => setDestination(null))
+      .finally(() => setLoading(false));
+  }, [id]);
+  console.log(destination);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-gray-500 text-lg">Loading...</div>
+      </div>
+    );
+  }
+
   if (!destination) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
