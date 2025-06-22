@@ -35,9 +35,8 @@ const Destinations = () => {
           id: dest.id,
           name: dest.name,
           description: dest.description,
-          image: dest.image
-            ? `${API_URL?.replace("/api", "")}/storage/${dest.image}`
-            : "https://via.placeholder.com/400x250?text=No+Image",
+          image: dest.image,
+
           activities: dest.activities
             ? dest.activities.map((a: any) => a.name)
             : [],

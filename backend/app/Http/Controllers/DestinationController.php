@@ -11,7 +11,11 @@ use Illuminate\Support\Facades\Storage;
 class DestinationController extends Controller
 {
     public function index() : JsonResponse {
-        return response()->json(Destination::with('user','activities')->get());
+     $destinations = Destination::with('user','activities','reviews')->get()->map(function ($destination){
+        $destination->image = $destination->image?asset("/storage/".$destination->image):null;
+        return $destination;
+     });
+     return response()->json($destinations);
     }
     public function store(Request $request) : JsonResponse {
         
@@ -31,9 +35,25 @@ class DestinationController extends Controller
     }
 
     public function show($id) : JsonResponse {
-        return response()->json(Destination::with('user','activities')->findOrFail($id));
-        
+    $destination = Destination::with('user','activities','reviews')->findOrFail($id);
+    
+    // Convert image path to full URL
+    if ($destination->image) {
+        $destination->image = asset('storage/'.$destination->image);
     }
+    
+    // Also convert activity images if they exist
+    if ($destination->activities) {
+        $destination->activities->transform(function ($activity) {
+            if ($activity->image) {
+                $activity->image = asset('storage/'.$activity->image);
+            }
+            return $activity;
+        });
+    }
+    
+    return response()->json($destination);
+}
 
     public function  update(Request $request,$id) : JsonResponse {
 

@@ -22,4 +22,7 @@ class Destination extends Model
     {
         return $this->hasMany(Activity::class);
     }
+    public function  reviews() : HasMany {
+        return $this->hasMany(Review::class);
+    }
 }

@@ -80,4 +80,23 @@ class SimpleAuthController extends Controller
         
         
     }
+
+    public function __invoke(Request $request):JsonResponse
+    {
+        $user = $request->user();
+       return response()->json([
+            'status' => true,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'email_verified_at' => $user->email_verified_at,
+                'profile_picture' => $user->profile_picture,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+            ],
+            'message' => 'User data retrieved successfully'
+        ]);
+    }
 }

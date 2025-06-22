@@ -7,9 +7,15 @@ import {
   GlobeIcon,
   CreditCardIcon,
   ShieldIcon,
+  MailIcon,
+  CalendarIcon,
 } from "lucide-react";
+import { AppHook } from "@/context/AppProvider";
+
 const UserSettings = () => {
   const [activeTab, setActiveTab] = useState("profile");
+  const { user } = AppHook();
+
   const tabs = [
     {
       id: "profile",
@@ -42,6 +48,16 @@ const UserSettings = () => {
       icon: ShieldIcon,
     },
   ];
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -51,6 +67,7 @@ const UserSettings = () => {
             Manage your account settings and preferences
           </p>
         </div>
+
         <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-6">
           {/* Sidebar */}
           <div className="sm:col-span-1">
@@ -78,6 +95,7 @@ const UserSettings = () => {
               })}
             </nav>
           </div>
+
           {/* Content */}
           <div className="sm:col-span-5">
             <div className="bg-white shadow rounded-lg">
@@ -86,14 +104,22 @@ const UserSettings = () => {
                   <h2 className="text-lg font-medium text-gray-900 mb-6">
                     Profile Information
                   </h2>
-                  <form className="space-y-6">
-                    <div className="flex items-center">
+
+                  <div className="flex flex-col sm:flex-row gap-6">
+                    {/* Profile Picture Section */}
+                    <div className="flex flex-col items-center">
                       <div className="relative">
-                        <img
-                          className="h-24 w-24 rounded-full"
-                          src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                          alt="Profile"
-                        />
+                        <div className="h-24 w-24 rounded-full bg-gray-200 flex items-center justify-center">
+                          {user?.profile_picture ? (
+                            <img
+                              src={user.profile_picture}
+                              alt="Profile"
+                              className="h-full w-full rounded-full object-cover"
+                            />
+                          ) : (
+                            <UserIcon className="h-12 w-12 text-gray-400" />
+                          )}
+                        </div>
                         <button
                           type="button"
                           className="absolute bottom-0 right-0 bg-white rounded-full p-1 border border-gray-300"
@@ -104,84 +130,101 @@ const UserSettings = () => {
                       </div>
                       <button
                         type="button"
-                        className="ml-5 bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50"
+                        className="mt-4 bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50"
                       >
-                        Change
+                        Change Photo
                       </button>
                     </div>
-                    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                      <div>
-                        <label
-                          htmlFor="firstName"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          First name
-                        </label>
-                        <input
-                          type="text"
-                          name="firstName"
-                          id="firstName"
-                          defaultValue="John"
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        />
+
+                    {/* User Info Section */}
+                    <div className="flex-1">
+                      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div className="sm:col-span-2">
+                          <div className="flex items-center mb-2">
+                            <UserIcon className="h-5 w-5 text-gray-400 mr-2" />
+                            <span className="text-sm font-medium text-gray-500">
+                              Full Name
+                            </span>
+                          </div>
+                          <div className="text-lg font-medium text-gray-900">
+                            {user?.name || "Not provided"}
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <div className="flex items-center mb-2">
+                            <MailIcon className="h-5 w-5 text-gray-400 mr-2" />
+                            <span className="text-sm font-medium text-gray-500">
+                              Email
+                            </span>
+                          </div>
+                          <div className="text-lg font-medium text-gray-900">
+                            {user?.email}
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center mb-2">
+                            <ShieldIcon className="h-5 w-5 text-gray-400 mr-2" />
+                            <span className="text-sm font-medium text-gray-500">
+                              Account Type
+                            </span>
+                          </div>
+                          <div className="text-lg font-medium text-gray-900 capitalize">
+                            {user?.role || "user"}
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center mb-2">
+                            <CalendarIcon className="h-5 w-5 text-gray-400 mr-2" />
+                            <span className="text-sm font-medium text-gray-500">
+                              Member Since
+                            </span>
+                          </div>
+                          <div className="text-lg font-medium text-gray-900">
+                            {user?.created_at
+                              ? formatDate(user.created_at)
+                              : "Unknown"}
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <label
-                          htmlFor="lastName"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Last name
-                        </label>
-                        <input
-                          type="text"
-                          name="lastName"
-                          id="lastName"
-                          defaultValue="Doe"
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label
-                          htmlFor="email"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          name="email"
-                          id="email"
-                          defaultValue="john.doe@example.com"
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <label
-                          htmlFor="phone"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Phone number
-                        </label>
-                        <input
-                          type="tel"
-                          name="phone"
-                          id="phone"
-                          defaultValue="+1 (555) 123-4567"
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        />
+
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <h3 className="text-md font-medium text-gray-900 mb-4">
+                          Update Profile
+                        </h3>
+                        <form className="space-y-4">
+                          <div>
+                            <label
+                              htmlFor="name"
+                              className="block text-sm font-medium text-gray-700"
+                            >
+                              Full Name
+                            </label>
+                            <input
+                              type="text"
+                              id="name"
+                              name="name"
+                              defaultValue={user?.name || ""}
+                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            />
+                          </div>
+                          <div className="flex justify-end">
+                            <button
+                              type="submit"
+                              className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                              Save Changes
+                            </button>
+                          </div>
+                        </form>
                       </div>
                     </div>
-                    <div className="flex justify-end">
-                      <button
-                        type="submit"
-                        className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      >
-                        Save changes
-                      </button>
-                    </div>
-                  </form>
+                  </div>
                 </div>
               )}
+
               {activeTab === "notifications" && (
                 <div className="p-6">
                   <h2 className="text-lg font-medium text-gray-900 mb-6">
@@ -193,15 +236,18 @@ const UserSettings = () => {
                         title: "Travel Updates",
                         description:
                           "Get notified about your upcoming trips and itinerary changes",
+                        enabled: true,
                       },
                       {
                         title: "Promotional Emails",
                         description: "Receive special offers and travel deals",
+                        enabled: true,
                       },
                       {
                         title: "Account Security",
                         description:
                           "Get alerts about suspicious activity and security updates",
+                        enabled: true,
                       },
                     ].map((item) => (
                       <div key={item.title} className="flex items-start">
@@ -210,7 +256,7 @@ const UserSettings = () => {
                             id={item.title}
                             name={item.title}
                             type="checkbox"
-                            defaultChecked
+                            defaultChecked={item.enabled}
                             className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded"
                           />
                         </div>
@@ -230,17 +276,40 @@ const UserSettings = () => {
                   </div>
                 </div>
               )}
+
               {activeTab === "security" && (
                 <div className="p-6">
                   <h2 className="text-lg font-medium text-gray-900 mb-6">
                     Security Settings
                   </h2>
-                  <form className="space-y-6">
+                  <div className="space-y-6">
                     <div>
-                      <h3 className="text-sm font-medium text-gray-900">
+                      <h3 className="text-md font-medium text-gray-900 mb-2">
+                        Email Verification
+                      </h3>
+                      <div className="flex items-center">
+                        {user?.email_verified_at ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Verified
+                          </span>
+                        ) : (
+                          <>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              Not Verified
+                            </span>
+                            <button className="ml-3 text-sm font-medium text-blue-600 hover:text-blue-500">
+                              Verify Email
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-200">
+                      <h3 className="text-md font-medium text-gray-900 mb-4">
                         Change Password
                       </h3>
-                      <div className="mt-4 space-y-4">
+                      <form className="space-y-4">
                         <div>
                           <label
                             htmlFor="current-password"
@@ -250,8 +319,8 @@ const UserSettings = () => {
                           </label>
                           <input
                             type="password"
-                            name="current-password"
                             id="current-password"
+                            name="current-password"
                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                           />
                         </div>
@@ -264,8 +333,8 @@ const UserSettings = () => {
                           </label>
                           <input
                             type="password"
-                            name="new-password"
                             id="new-password"
+                            name="new-password"
                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                           />
                         </div>
@@ -278,35 +347,22 @@ const UserSettings = () => {
                           </label>
                           <input
                             type="password"
-                            name="confirm-password"
                             id="confirm-password"
+                            name="confirm-password"
                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                           />
                         </div>
-                      </div>
+                        <div className="flex justify-end">
+                          <button
+                            type="submit"
+                            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            Update Password
+                          </button>
+                        </div>
+                      </form>
                     </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">
-                        Two-Factor Authentication
-                      </h3>
-                      <div className="mt-4">
-                        <button
-                          type="button"
-                          className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                        >
-                          Enable Two-Factor Authentication
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex justify-end">
-                      <button
-                        type="submit"
-                        className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      >
-                        Save changes
-                      </button>
-                    </div>
-                  </form>
+                  </div>
                 </div>
               )}
             </div>
@@ -316,4 +372,5 @@ const UserSettings = () => {
     </div>
   );
 };
+
 export default UserSettings;

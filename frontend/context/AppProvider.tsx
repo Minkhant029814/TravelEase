@@ -5,8 +5,24 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  profile_picture?: string | null;
+}
+interface AuthResponse {
+  user: User;
+  status: boolean;
+  token: string;
+  message: string;
+  role: string;
+}
+
 interface AppProviderType {
   isLoading: Boolean;
+  user: User | null;
   authToken: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (
@@ -24,16 +40,36 @@ const API_URL = `${process.env.NEXT_PUBLIC_API_URL}`;
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<Boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    const token = Cookies.get("authToken");
-    if (token) {
-      setAuthToken(token);
-    } else {
-      router.push("/auth/login");
-    }
-  }, []);
+    const initializeAuth = async () => {
+      const token = Cookies.get("authToken");
+      if (token) {
+        try {
+          setIsLoading(true);
+          // Verify token and fetch user data
+          const response = await axios.get(`${API_URL}/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          setUser(response.data.user);
+          setAuthToken(token);
+        } catch (error) {
+          console.error("Auth verification failed:", error);
+          logout();
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        router.push("/auth/login");
+      }
+    };
+
+    initializeAuth();
+  }, [router]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -42,7 +78,9 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         email,
         password,
       });
-      console.log(response);
+      console.log(response.data);
+      setUser(response.data.user);
+
       if (response.data.status) {
         Cookies.set("authToken", response.data.token, { expires: 7 });
         setAuthToken(response.data.token);
@@ -70,6 +108,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         role,
       });
       console.log(response);
+      setUser(response.data);
       if (response.data.status) {
         Cookies.set("authToken", response.data.token, { expires: 7 });
         setAuthToken(response.data.token);
@@ -91,7 +130,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <Appcontext.Provider
-      value={{ login, register, logout, authToken, isLoading }}
+      value={{ login, register, logout, authToken, isLoading, user }}
     >
       {children}
     </Appcontext.Provider>

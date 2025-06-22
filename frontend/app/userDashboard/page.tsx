@@ -10,17 +10,20 @@ import {
   SettingsIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { AppHook } from "@/context/AppProvider";
 const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   // Mock user data
-  const user = {
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    joinDate: "January 2022",
-    upcomingReservations: 2,
-    pastReservations: 5,
-    notifications: 3,
-  };
+  // const user = {
+  //   name: "Jane Smith",
+  //   email: "jane.smith@example.com",
+  //   joinDate: "January 2022",
+  //   upcomingReservations: 2,
+  //   pastReservations: 5,
+  //   notifications: 3,
+  // };
+  const { user } = AppHook();
+  console.log(user);
   // Mock reservation data
   const upcomingReservations = [
     {
@@ -71,9 +74,9 @@ const UserDashboard = () => {
               </div>
               <div className="ml-4">
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Welcome back, {user.name}
+                  Welcome {user?.name}
                 </h1>
-                <p className="text-gray-500">Member since {user.joinDate}</p>
+                {/* <p className="text-gray-500">Member since {user.joinDate}</p> */}
               </div>
             </div>
             <div className="mt-4 sm:mt-0">
@@ -120,9 +123,9 @@ const UserDashboard = () => {
                 }`}
               >
                 Notifications
-                <span className="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2 rounded-full text-xs">
+                {/* <span className="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2 rounded-full text-xs">
                   {user.notifications}
-                </span>
+                </span> */}
               </button>
               <button
                 onClick={() => setActiveTab("support")}
@@ -153,9 +156,9 @@ const UserDashboard = () => {
                               Upcoming Trips
                             </dt>
                             <dd>
-                              <div className="text-lg font-medium text-gray-900">
+                              {/* <div className="text-lg font-medium text-gray-900">
                                 {user.upcomingReservations}
-                              </div>
+                              </div> */}
                             </dd>
                           </dl>
                         </div>
@@ -184,9 +187,9 @@ const UserDashboard = () => {
                               Past Trips
                             </dt>
                             <dd>
-                              <div className="text-lg font-medium text-gray-900">
+                              {/* <div className="text-lg font-medium text-gray-900">
                                 {user.pastReservations}
-                              </div>
+                              </div> */}
                             </dd>
                           </dl>
                         </div>
@@ -215,9 +218,9 @@ const UserDashboard = () => {
                               Notifications
                             </dt>
                             <dd>
-                              <div className="text-lg font-medium text-gray-900">
+                              {/* <div className="text-lg font-medium text-gray-900">
                                 {user.notifications}
-                              </div>
+                              </div> */}
                             </dd>
                           </dl>
                         </div>
