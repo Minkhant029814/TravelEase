@@ -32,11 +32,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('users/{user}/roles/{role}', [UserRoleController::class, 'attach']);
     Route::apiResource('destinations', DestinationController::class);
     Route::apiResource('activities', ActivityController::class);
-    Route::apiResource('travel_tips', TravelTipController::class);
 
-    Route::apiResource('reservations',ReservationController::class);
+    Route::apiResource('reservations', ReservationController::class);
     Route::apiResource('payments', PaymentController::class);
     Route::apiResource('customer_service', CustomerServicesController::class);
     Route::apiResource('reviews', ReviewController::class);
     Route::apiResource('notifications', NotificationController::class);
+
+    Route::get('/currentUser', [UserController::class, 'getCurrentUser']);
 });
+
+Route::apiResource('travel_tips', TravelTipController::class);
