@@ -14,10 +14,12 @@ return new class extends Migration
         Schema::create('reservations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('destination_id')->constrained()->onDelete('cascade');
             $table->json('travel_details');
-            $table->string('reservation_process');
             $table->string('payment_options');
             $table->string('confirmation_code')->nullable();
+            $table->string('status')->default('Completed');
+            $table->string('amount')->nullable();
             $table->timestamps();
         });
     }

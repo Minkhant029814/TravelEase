@@ -1,5 +1,8 @@
 <?php
 
+
+namespace Database\Seeders;
+
 use App\Models\Activity;
 use Illuminate\Database\Seeder;
 use App\Models\Destination;
@@ -9,8 +12,9 @@ use App\Models\User;
 class DestinationSeeder extends Seeder
 {
     public function run(): void
-    
-    { $userId = User::first()->id;
+
+    {
+        $userId = User::first()->id;
         $destinations = [
             [
                 'name' => 'Bali, Indonesia',
@@ -45,9 +49,9 @@ class DestinationSeeder extends Seeder
             ]);
             foreach ($dest['activities'] as $activityName) {
                 Activity::create([
-                    'destination_id'=>$destination->id,
-                    'name'=>$activityName,
-                    'image'=>null,
+                    'destination_id' => $destination->id,
+                    'name' => $activityName,
+                    'image' => null,
                 ]);
             }
         }

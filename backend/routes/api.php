@@ -24,7 +24,7 @@ Route::post('auth/login', [SimpleAuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('auth/logout', [SimpleAuthController::class, 'logout']);
-    Route::get('auth/me',SimpleAuthController::class);
+    Route::get('auth/me', SimpleAuthController::class);
     Route::post('oauth/logout', [AuthController::class, 'logout']);
 
     Route::apiResource('users', UserController::class);
@@ -37,9 +37,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('activities', ActivityController::class);
     Route::apiResource('travel_tips', TravelTipController::class);
 
-    Route::apiResource('reservations',ReservationController::class);
+
+    Route::get('reservations/upComing', [ReservationController::class, 'upComingTrips']);
+
+    Route::get('reservations/past', [ReservationController::class, 'pastTrips']);
+
+    Route::apiResource('reservations', ReservationController::class);
+
     Route::apiResource('payments', PaymentController::class);
     Route::apiResource('customer_service', CustomerServicesController::class);
+
+    Route::get('/reviews/reservations/{id}', [ReviewController::class, 'getReviewsByReservationId']);
+
     Route::apiResource('reviews', ReviewController::class);
     Route::apiResource('notifications', NotificationController::class);
 });
