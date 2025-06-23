@@ -22,6 +22,7 @@ class ReservationController extends Controller
             'travel_details' => 'required|array',
             'payment_options' => 'required|string',
             'confirmation_code' => 'required|string',
+            'status' => 'string',
             'amount' => 'required'
         ]);
         $data['travel_details'] = json_encode($data['travel_details']);
@@ -42,6 +43,7 @@ class ReservationController extends Controller
         $data = $request->validate([
             'travel_details' => 'array',
             'reservation_process' => 'string',
+            'status' => 'string',
             'payment_options' => 'string',
             'confirmation_code' => 'string|unique:reservations,confirmation_code,' . $id
         ]);
@@ -58,15 +60,15 @@ class ReservationController extends Controller
         return response()->json(null, 204);
     }
 
-    public function upComingTrips(): JsonResponse
+    public function upComingTrips($user_id): JsonResponse
     {
-        $reservation = Reservation::with('user', 'destination')->where('status', 'Completed')->get();
+        $reservation = Reservation::with('user', 'destination')->where('status', 'Completed')->where('user_id', $user_id)->get();
         return response()->json($reservation, 200);
     }
 
-    public function pastTrips(): JsonResponse
+    public function pastTrips($user_id): JsonResponse
     {
-        $reservation = Reservation::with('user', 'destination')->where('status', 'Confirmed')->get();
+        $reservation = Reservation::with('user', 'destination')->where('status', 'Confirmed')->where('user_id', $user_id)->get();
         return response()->json($reservation, 200);
     }
 }

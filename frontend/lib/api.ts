@@ -69,8 +69,9 @@ export default {
     deleteRole: (id: number) => api.delete(`/roles/${id}`),
 
     //  Reservations
-    getUpComingReservations: () => api.get("/reservations/upComing"),
-    getPastReservations: () => api.get("/reservations/past"),
+    getUpComingReservations: (id: number) =>
+        api.get(`/reservations/upComing/${id}`),
+    getPastReservations: (id: number) => api.get(`/reservations/past/${id}`),
     getReservations: () => api.get("/reservations"),
     createReservation: (data: any) => api.post("/reservations", data),
     getReservation: (id: number) => api.get(`/reservations/${id}`),

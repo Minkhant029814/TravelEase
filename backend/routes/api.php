@@ -38,9 +38,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('travel_tips', TravelTipController::class);
 
 
-    Route::get('reservations/upComing', [ReservationController::class, 'upComingTrips']);
+    Route::get('reservations/upComing/{user_id}', [ReservationController::class, 'upComingTrips']);
 
-    Route::get('reservations/past', [ReservationController::class, 'pastTrips']);
+    Route::get('reservations/past/{user_id}', [ReservationController::class, 'pastTrips']);
 
     Route::apiResource('reservations', ReservationController::class);
 

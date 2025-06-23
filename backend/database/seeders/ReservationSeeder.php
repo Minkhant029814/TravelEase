@@ -15,27 +15,33 @@ class ReservationSeeder extends Seeder
     {
         $reservations = [
             [
-                'id' => 5,
+                'id' => 7,
                 'user_id' => 2,
                 'destination_id' => 1,
                 'confirmation_code' => 'CONF901234',
-                'travel_details' => "test",
+                'travel_details' => [
+                    "start_date" => "2025-06-25",
+                    "end_date" => "2025-06-30",
+                    "travelers" => 2
+                ],
                 'status' => 'Confirmed',
-                // 'reservation_process' => 'inprogress',
                 'payment_options' => 'Paid',
                 'amount' => '$1,450.00',
             ],
             [
-                'id' => 6,
+                'id' => 8,
                 'user_id' => 2,
-                'destination_id' => 2,
+                'destination_id' => 1,
                 'confirmation_code' => 'CONF901234',
-                // 'reservation_process' => 'inprogress',
-                'travel_details' => 'test',
+                'travel_details' => [
+                    "start_date" => "2025-06-25",
+                    "end_date" => "2025-06-30",
+                    "travelers" => 2
+                ],
                 'status' => 'Confirmed',
                 'payment_options' => 'Paid',
                 'amount' => '$1,450.00',
-            ],
+            ]
 
 
         ];

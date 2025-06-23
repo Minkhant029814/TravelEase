@@ -12,18 +12,21 @@ import {
 import Link from "next/link";
 import { toast } from "react-toastify";
 import api from "@/lib/api";
+import { AppHook } from "@/context/AppProvider";
 
 const Reservations = () => {
     const [upComingReservations, setUpComingReservations] = useState([]);
     const [pastReservations, setPastReservations] = useState([]);
     const [filter, setFilter] = useState("upcoming");
     const [showFilters, setShowFilters] = useState(false);
+    const { user } = AppHook();
+    console.log(user);
 
     const fetchReservations = async () => {
         try {
             const [upComingResponse, pastResponse] = await Promise.all([
-                api.getUpComingReservations(),
-                api.getPastReservations(),
+                api.getUpComingReservations(Number(user?.id)),
+                api.getPastReservations(Number(user?.id)),
             ]);
             setUpComingReservations(upComingResponse.data);
             setPastReservations(pastResponse.data);
