@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Activity;
 use App\Models\Destination;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,25 +17,45 @@ class DestinationController extends Controller
             $destination->image = $destination->image ? asset("/storage/" . $destination->image) : null;
             return $destination;
         });
+
         return response()->json($destinations);
     }
     public function store(Request $request): JsonResponse
     {
-
-        $data = $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string',
             'description' => 'required|string',
             'sort_by' => 'required|string',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|max:2048',
+            'activities' => 'nullable|array',
+            'activities.*.name' => 'required|string',
+            'user_id' => 'required|exists:users,id',
         ]);
-        $data['user_id'] = Auth::user()->id;
+
+        $data = $validated;
+        // $data['user_id'] = Auth::id();
+
+        // Handle destination image
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('destinations', 'public');
         }
+
+        // Create destination
         $destination = Destination::create($data);
+
+        // Create activities if provided
+        if (!empty($validated['activities'])) {
+            foreach ($validated['activities'] as $activityData) {
+                // dd($activityData);
+                $activityData['destination_id'] = $destination->id;
+                Activity::create($activityData);
+            }
+        }
+
 
         return response()->json($destination, 201);
     }
+
 
     public function show($id): JsonResponse
     {

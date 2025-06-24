@@ -86,9 +86,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
                 setAuthToken(response.data.token);
                 router.push("/userDashboard");
             }
-            if (response.data.role === "admin") {
-                router.push("/testingAdmin/dashboard");
-            }
         } catch (error) {
             console.log(error);
         } finally {

@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import {
     BarChart3Icon,
@@ -11,35 +11,122 @@ import {
     DollarSignIcon,
     AlertTriangleIcon,
 } from "lucide-react";
-import { bookings, destinations, users } from "../mockData";
+// import { bookings, destinations, users } from "../mockData";
 import AdminLayout from "../Layout";
+import { AppHook } from "@/context/AppProvider";
+import api from "@/lib/api";
 
+interface Destination {
+    id: number;
+    name: string;
+
+    sort_by: string;
+}
+
+interface User {
+    id: number;
+    name: string;
+}
+
+interface Reservation {
+    id: number;
+    destination_id: number;
+    user_id: number;
+    amount: string;
+    status: string;
+}
 const Dashboard = () => {
     // Calculate some statistics for the dashboard
+
+    const [users, setUsers] = React.useState<User[]>([]);
+    const [destinations, setDestinations] = React.useState<Destination[]>([]);
+    const [reservations, setReservations] = React.useState<Reservation[]>([]);
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const [
+                    usersResponse,
+                    destinationsResponse,
+                    reservationsResponse,
+                ] = await Promise.all([
+                    api.getUsers(),
+                    api.getDestinations(),
+                    api.getReservations(),
+                ]);
+                setUsers(usersResponse.data);
+                setDestinations(destinationsResponse.data);
+                setReservations(reservationsResponse.data);
+            } catch (err) {
+                setError("Failed to fetch dashboard data");
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    const { user } = AppHook();
+    if (!user || user.role !== "admin") {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <AlertTriangleIcon className="h-12 w-12 text-red-500" />
+                <p className="ml-2 text-lg text-gray-700">
+                    You do not have permission to access this page.
+                </p>
+            </div>
+        );
+    }
+    if (loading) {
+        return (
+            <AdminLayout>
+                <div className="flex items-center justify-center h-screen">
+                    <p className="text-lg text-gray-700">Loading...</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
+    if (error) {
+        return (
+            <AdminLayout>
+                <div className="flex items-center justify-center h-screen">
+                    <AlertTriangleIcon className="h-12 w-12 text-red-500" />
+                    <p className="ml-2 text-lg text-gray-700">{error}</p>
+                </div>
+            </AdminLayout>
+        );
+    }
+
     const totalUsers = users.length;
     const totalDestinations = destinations.length;
-    const totalBookings = bookings.length;
-    const totalRevenue = bookings.reduce(
-        (sum, booking) => sum + booking.totalPrice,
+    const totalBookings = reservations.length;
+    const totalRevenue = reservations.reduce(
+        (sum, reservation) => sum + parseInt(reservation.amount),
         0
     );
-    // Pending bookings
-    const pendingBookings = bookings.filter(
-        (booking) => booking.status === "pending"
+    const pendingBookings = reservations.filter(
+        (reservation) => reservation.status.toLowerCase() === "pending"
     );
-    // Most popular destination
-    const destinationCounts = bookings.reduce((acc, booking) => {
-        acc[booking.destinationId] = (acc[booking.destinationId] || 0) + 1;
-        return acc;
-    }, {});
+    const destinationCounts = reservations.reduce(
+        (acc: { [key: string]: number }, reservation) => {
+            acc[reservation.destination_id] =
+                (acc[reservation.destination_id] || 0) + 1;
+            return acc;
+        },
+        {}
+    );
     const mostPopularDestId = Object.keys(destinationCounts).reduce(
         (a, b) => (destinationCounts[a] > destinationCounts[b] ? a : b),
-        Object.keys(destinationCounts)[0]
+        Object.keys(destinationCounts)[0] || ""
     );
     const mostPopularDestination = destinations.find(
-        (dest) => dest.id === mostPopularDestId
+        (dest) => dest.id === parseInt(mostPopularDestId)
     );
-
     return (
         <AdminLayout>
             <div className="px-4 py-6 sm:px-0">
@@ -76,7 +163,7 @@ const Dashboard = () => {
                         <div className="bg-gray-50 px-5 py-3">
                             <div className="text-sm">
                                 <Link
-                                    href="/admin/bookings"
+                                    href="/testingAdmin/bookings"
                                     className="font-medium text-blue-700 hover:text-blue-900"
                                 >
                                     View all
@@ -139,7 +226,7 @@ const Dashboard = () => {
                         <div className="bg-gray-50 px-5 py-3">
                             <div className="text-sm">
                                 <Link
-                                    href="/admin/users"
+                                    href="/testingAdmin/users"
                                     className="font-medium text-blue-700 hover:text-blue-900"
                                 >
                                     View all
@@ -170,7 +257,7 @@ const Dashboard = () => {
                         <div className="bg-gray-50 px-5 py-3">
                             <div className="text-sm">
                                 <Link
-                                    href="/admin/destinations"
+                                    href="/testingAdmin/destinations"
                                     className="font-medium text-blue-700 hover:text-blue-900"
                                 >
                                     View all
@@ -189,60 +276,68 @@ const Dashboard = () => {
                         <div className="p-5">
                             <div className="flow-root">
                                 <ul className="divide-y divide-gray-200">
-                                    {bookings.slice(0, 5).map((booking) => {
-                                        const destination = destinations.find(
-                                            (d) =>
-                                                d.id === booking.destinationId
-                                        );
-                                        const user = users.find(
-                                            (u) => u.id === booking.userId
-                                        );
-                                        return (
-                                            <li
-                                                key={booking.id}
-                                                className="py-4"
-                                            >
-                                                <div className="flex items-center space-x-4">
-                                                    <div className="flex-shrink-0">
-                                                        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                                            <CalendarIcon className="h-6 w-6 text-gray-500" />
+                                    {reservations
+                                        .slice(0, 5)
+                                        .map((reservation) => {
+                                            const destination =
+                                                destinations.find(
+                                                    (d) =>
+                                                        d.id ===
+                                                        reservation.destination_id
+                                                );
+                                            const user = users.find(
+                                                (u) =>
+                                                    u.id === reservation.user_id
+                                            );
+                                            return (
+                                                <li
+                                                    key={reservation.id}
+                                                    className="py-4"
+                                                >
+                                                    <div className="flex items-center space-x-4">
+                                                        <div className="flex-shrink-0">
+                                                            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                                                <CalendarIcon className="h-6 w-6 text-gray-500" />
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium text-gray-900 truncate">
+                                                                {destination?.name ||
+                                                                    "Unknown Destination"}
+                                                            </p>
+                                                            <p className="text-sm text-gray-500 truncate">
+                                                                Booked by{" "}
+                                                                {user?.name ||
+                                                                    "Unknown User"}
+                                                            </p>
+                                                        </div>
+                                                        <div>
+                                                            <span
+                                                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                                    reservation.status.toLowerCase() ===
+                                                                    "confirmed"
+                                                                        ? "bg-green-100 text-green-800"
+                                                                        : "bg-yellow-100 text-yellow-800"
+                                                                }`}
+                                                            >
+                                                                {reservation.status
+                                                                    .charAt(0)
+                                                                    .toUpperCase() +
+                                                                    reservation.status.slice(
+                                                                        1
+                                                                    )}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-sm text-gray-500">
+                                                            $
+                                                            {parseFloat(
+                                                                reservation.amount
+                                                            ).toLocaleString()}
                                                         </div>
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-medium text-gray-900 truncate">
-                                                            {destination?.title ||
-                                                                "Unknown Destination"}
-                                                        </p>
-                                                        <p className="text-sm text-gray-500 truncate">
-                                                            Booked by{" "}
-                                                            {user?.name ||
-                                                                "Unknown User"}
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <span
-                                                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                                booking.status ===
-                                                                "confirmed"
-                                                                    ? "bg-green-100 text-green-800"
-                                                                    : "bg-yellow-100 text-yellow-800"
-                                                            }`}
-                                                        >
-                                                            {booking.status
-                                                                .charAt(0)
-                                                                .toUpperCase() +
-                                                                booking.status.slice(
-                                                                    1
-                                                                )}
-                                                        </span>
-                                                    </div>
-                                                    <div className="text-sm text-gray-500">
-                                                        ${booking.totalPrice}
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
+                                                </li>
+                                            );
+                                        })}
                                 </ul>
                             </div>
                         </div>
@@ -270,10 +365,10 @@ const Dashboard = () => {
                                         Most Popular Destination
                                     </dt>
                                     <dd className="mt-1 text-lg font-semibold text-gray-900 truncate">
-                                        {mostPopularDestination?.title || "N/A"}
+                                        {mostPopularDestination?.name || "N/A"}
                                     </dd>
                                     <dd className="mt-1 text-sm text-gray-500">
-                                        {mostPopularDestination?.location || ""}
+                                        {mostPopularDestination?.sort_by || ""}
                                     </dd>
                                 </div>
                                 <div className="bg-gray-50 overflow-hidden rounded-lg px-4 py-5 sm:p-6">
