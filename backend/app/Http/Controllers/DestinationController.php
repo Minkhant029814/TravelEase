@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Activity;
 use App\Models\Destination;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -10,77 +11,97 @@ use Illuminate\Support\Facades\Storage;
 
 class DestinationController extends Controller
 {
-    public function index() : JsonResponse {
-     $destinations = Destination::with('user','activities','reviews')->get()->map(function ($destination){
-        $destination->image = $destination->image?asset("/storage/".$destination->image):null;
-        return $destination;
-     });
-     return response()->json($destinations);
+    public function index(): JsonResponse
+    {
+        $destinations = Destination::with('user', 'activities', 'reviews')->get()->map(function ($destination) {
+            $destination->image = $destination->image ? asset("/storage/" . $destination->image) : null;
+            return $destination;
+        });
+
+        return response()->json($destinations);
     }
-    public function store(Request $request) : JsonResponse {
-        
-        $data = $request->validate([
-            'name'=>'required|string',
-            'description'=>'required|string',
-            'sort_by'=>'required|string',
-            'image'=>'nullable|image|max:2048',
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'description' => 'required|string',
+            'sort_by' => 'required|string',
+            'image' => 'nullable|max:2048',
+            'activities' => 'nullable|array',
+            'activities.*.name' => 'required|string',
+            'user_id' => 'required|exists:users,id',
         ]);
-        $data['user_id']=Auth::user()->id;
-        if($request->hasFile('image')){
-            $data['image']= $request->file('image')->store('destinations','public');
+
+        $data = $validated;
+        // $data['user_id'] = Auth::id();
+
+        // Handle destination image
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('destinations', 'public');
         }
+
+        // Create destination
         $destination = Destination::create($data);
 
-        return response()->json($destination,201);
-    }
-
-    public function show($id) : JsonResponse {
-    $destination = Destination::with('user','activities','reviews')->findOrFail($id);
-    
-    // Convert image path to full URL
-    if ($destination->image) {
-        $destination->image = asset('storage/'.$destination->image);
-    }
-    
-    // Also convert activity images if they exist
-    if ($destination->activities) {
-        $destination->activities->transform(function ($activity) {
-            if ($activity->image) {
-                $activity->image = asset('storage/'.$activity->image);
+        // Create activities if provided
+        if (!empty($validated['activities'])) {
+            foreach ($validated['activities'] as $activityData) {
+                // dd($activityData);
+                $activityData['destination_id'] = $destination->id;
+                Activity::create($activityData);
             }
-            return $activity;
-        });
-    }
-    
-    return response()->json($destination);
-}
+        }
 
-    public function  update(Request $request,$id) : JsonResponse {
+
+        return response()->json($destination, 201);
+    }
+
+
+    public function show($id): JsonResponse
+    {
+        $destination = Destination::with('user', 'activities', 'reviews')->findOrFail($id);
+
+        // Convert image path to full URL
+        if ($destination->image) {
+            $destination->image = asset('storage/' . $destination->image);
+        }
+
+        // Also convert activity images if they exist
+        if ($destination->activities) {
+            $destination->activities->transform(function ($activity) {
+                if ($activity->image) {
+                    $activity->image = asset('storage/' . $activity->image);
+                }
+                return $activity;
+            });
+        }
+
+        return response()->json($destination);
+    }
+
+    public function  update(Request $request, $id): JsonResponse
+    {
 
         $destination = Destination::findOrFail($id);
         $data = $request->validate([
-            'name'=>'string',
-            'description'=>'string',
-            'sort_by'=>'string',
-            'image'=>'nullable|image|max:2048',
+            'name' => 'string',
+            'description' => 'string',
+            'sort_by' => 'string',
+            'image' => 'nullable|image|max:2048',
         ]);
-        if ($request->hasFile('image'))
-        {   if($destination->image) Storage::delete($destination->image);
-            $data['image'] = $request->file('image')->store('destinations','public');
+        if ($request->hasFile('image')) {
+            if ($destination->image) Storage::delete($destination->image);
+            $data['image'] = $request->file('image')->store('destinations', 'public');
         }
         $destination->update($data);
         return response()->json($destination);
-        
     }
 
-    public function destroy($id) : JsonResponse {
+    public function destroy($id): JsonResponse
+    {
         $destination = Destination::findOrFail($id);
-        if($destination->image) Storage::delete($destination->image);
+        if ($destination->image) Storage::delete($destination->image);
         $destination->delete();
-        return response()->json(null,204);
-
+        return response()->json(null, 204);
     }
-
-
 }
-

@@ -20,24 +20,25 @@ class DestinationSeeder extends Seeder
                 'name' => 'Bali, Indonesia',
                 'description' => 'A tropical paradise known for its beaches and temples.',
                 'sort_by' => 'Asia',
-                'image' => null,
+                'image' => 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80', // Bali beach
                 'activities' => ['Beach', 'Surfing', 'Temples', 'Nightlife'],
             ],
             [
                 'name' => 'Kyoto, Japan',
                 'description' => 'Famous for its temples, gardens, and tea ceremonies.',
                 'sort_by' => 'Asia',
-                'image' => null,
+                'image' => 'https://images.unsplash.com/photo-1549692520-acc6669e2f0c?auto=format&fit=crop&w=800&q=80', // Kyoto temple
                 'activities' => ['Temples', 'Gardens', 'Cultural Tours', 'Tea Ceremony'],
             ],
             [
                 'name' => 'Paris, France',
                 'description' => 'The city of lights, known for its cafes and the Eiffel Tower.',
                 'sort_by' => 'Europe',
-                'image' => null,
+                'image' => 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=800&q=80', // Paris Eiffel Tower
                 'activities' => ['Museums', 'Shopping', 'Cafes', 'Landmarks'],
             ],
         ];
+
 
         foreach ($destinations as $dest) {
             $destination = Destination::create([

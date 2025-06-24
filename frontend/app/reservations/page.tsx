@@ -20,7 +20,7 @@ const Reservations = () => {
     const [filter, setFilter] = useState("upcoming");
     const [showFilters, setShowFilters] = useState(false);
     const { user } = AppHook();
-    console.log(user);
+    // console.log(user);
 
     const fetchReservations = async () => {
         try {
