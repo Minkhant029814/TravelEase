@@ -25,7 +25,7 @@ class DestinationController extends Controller
         $validated = $request->validate([
             'name' => 'required|string',
             'description' => 'required|string',
-            'sort_by' => 'required|string',
+            'amount' => 'required|integer',
             'image' => 'nullable|max:2048',
             'activities' => 'nullable|array',
             'activities.*.name' => 'required|string',
@@ -103,5 +103,25 @@ class DestinationController extends Controller
         if ($destination->image) Storage::delete($destination->image);
         $destination->delete();
         return response()->json(null, 204);
+    }
+
+    public function getFeaturedDestinations()
+    {
+        // Load all destinations with their reviews
+        $destinations = Destination::with('reviews')->get();
+
+        // Filter by average rating > 3
+        $filtered = $destinations->filter(function ($destination) {
+            $average = $destination->reviews->avg('rating');
+            return $average > 3;
+        });
+
+        // Take only 4 and add the average manually
+        $result = $filtered->take(4)->map(function ($destination) {
+            $destination->average_rating = round($destination->reviews->avg('rating'), 1);
+            return $destination;
+        });
+
+        return response()->json($result->values());
     }
 }

@@ -13,6 +13,7 @@ class Destination extends Model
         'user_id',
         'sort_by',
         'description',
+        'amount',
         'image'
     ];
 

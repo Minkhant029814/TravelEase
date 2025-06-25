@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { PlusIcon, PencilIcon, TrashIcon, StarIcon } from "lucide-react";
+import { PlusIcon, PencilIcon, TrashIcon, StarIcon, XIcon } from "lucide-react";
 import AdminLayout from "../Layout";
 import api from "@/lib/api";
 import { AppHook } from "@/context/AppProvider";
@@ -27,6 +27,7 @@ interface Destination {
     name: string;
     sort_by: string;
     description: string;
+    amount: number;
     image: string | null;
     user_id: number;
     user: User;
@@ -47,6 +48,7 @@ const AdminDestinations = () => {
         description: "",
         image: null as File | null,
         user_id: 0,
+        amount: 0,
         activities: [{ id: 0, name: "", image: null as File | null }],
     });
     const [loading, setLoading] = useState(true);
@@ -154,6 +156,7 @@ const AdminDestinations = () => {
             name: "",
             sort_by: "",
             description: "",
+            amount: 0,
             image: null,
             user_id: user?.id || 0,
             activities: [{ id: 0, name: "", image: null }],
@@ -167,6 +170,7 @@ const AdminDestinations = () => {
             name: destination.name,
             sort_by: destination.sort_by,
             description: destination.description,
+            amount: destination.amount,
             image: null,
             user_id: destination.user_id,
             activities:
@@ -195,6 +199,7 @@ const AdminDestinations = () => {
             formDataToSend.append("sort_by", formData.sort_by);
             formDataToSend.append("description", formData.description);
             formDataToSend.append("user_id", formData.user_id.toString());
+            formDataToSend.append("amount", formData.amount.toString());
             if (formData.image) {
                 formDataToSend.append("image", formData.image);
             }
@@ -538,38 +543,27 @@ const AdminDestinations = () => {
             </div>
             {isAddModalOpen && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm"
+                    className="fixed inset-0 z-50 flex items-center justify-center"
                     onClick={() => setIsAddModalOpen(false)}
                 >
                     <div
                         ref={addModalRef}
-                        className="relative bg-white rounded-2xl p-8 shadow-2xl transform transition-all max-w-xl w-full mx-4 sm:mx-0"
+                        className="relative bg-white rounded-xl p-8 shadow-2xl transform transition-all max-w-lg w-full mx-4 sm:mx-0 max-h-[90vh] overflow-y-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
                             type="button"
-                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none"
+                            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1 transition-colors"
                             onClick={() => setIsAddModalOpen(false)}
+                            aria-label="Close modal"
                         >
-                            <svg
-                                className="h-6 w-6"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M6 18L18 6M6 6l12 12"
-                                />
-                            </svg>
+                            <XIcon className="h-6 w-6" />
                         </button>
                         <h3 className="text-2xl font-bold text-gray-900 mb-6">
                             Add New Destination
                         </h3>
                         {error && (
-                            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
+                            <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg text-sm border border-red-200">
                                 {error}
                             </div>
                         )}
@@ -582,7 +576,7 @@ const AdminDestinations = () => {
                                 <div>
                                     <label
                                         htmlFor="name"
-                                        className="block text-sm font-medium text-gray-700 mb-1"
+                                        className="block text-sm font-semibold text-gray-700 mb-2"
                                     >
                                         Destination Name
                                     </label>
@@ -593,33 +587,33 @@ const AdminDestinations = () => {
                                         value={formData.name}
                                         onChange={handleInputChange}
                                         required
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-sm"
-                                        placeholder="Enter destination name"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-sm bg-gray-50 hover:bg-white placeholder-gray-400"
+                                        placeholder="e.g., Paris"
                                     />
                                 </div>
                                 <div>
                                     <label
-                                        htmlFor="sort_by"
-                                        className="block text-sm font-medium text-gray-700 mb-1"
+                                        htmlFor="amount"
+                                        className="block text-sm font-semibold text-gray-700 mb-2"
                                     >
-                                        Region
+                                        Amount
                                     </label>
                                     <input
                                         type="text"
-                                        name="sort_by"
-                                        id="sort_by"
-                                        value={formData.sort_by}
+                                        name="amount"
+                                        id="amount"
+                                        value={formData.amount}
                                         onChange={handleInputChange}
                                         required
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-sm"
-                                        placeholder="Enter region"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-sm bg-gray-50 hover:bg-white placeholder-gray-400"
+                                        placeholder="e.g., $500"
                                     />
                                 </div>
                             </div>
                             <div>
                                 <label
                                     htmlFor="description"
-                                    className="block text-sm font-medium text-gray-700 mb-1"
+                                    className="block text-sm font-semibold text-gray-700 mb-2"
                                 >
                                     Description
                                 </label>
@@ -630,14 +624,14 @@ const AdminDestinations = () => {
                                     value={formData.description}
                                     onChange={handleInputChange}
                                     required
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-sm"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-sm bg-gray-50 hover:bg-white placeholder-gray-400 resize-none"
                                     placeholder="Describe the destination"
                                 />
                             </div>
                             <div>
                                 <label
                                     htmlFor="image"
-                                    className="block text-sm font-medium text-gray-700 mb-1"
+                                    className="block text-sm font-semibold text-gray-700 mb-2"
                                 >
                                     Destination Image
                                 </label>
@@ -647,7 +641,7 @@ const AdminDestinations = () => {
                                     id="image"
                                     accept="image/*"
                                     onChange={handleFileChange}
-                                    className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                    className="w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 file:hover:bg-blue-100 file:shadow-sm file:transition-colors"
                                 />
                             </div>
                             <div className="border-t border-gray-200 pt-6">
@@ -657,23 +651,23 @@ const AdminDestinations = () => {
                                 {formData.activities.map((activity, index) => (
                                     <div
                                         key={index}
-                                        className="mb-4 p-4 bg-gray-50 rounded-lg relative"
+                                        className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm relative"
                                     >
-                                        <h5 className="text-sm font-medium text-gray-700 mb-2">
+                                        <h5 className="text-sm font-semibold text-gray-700 mb-2">
                                             Activity {index + 1}
                                         </h5>
                                         <div className="space-y-4">
                                             <div>
                                                 <label
                                                     htmlFor={`activity-name-${index}`}
-                                                    className="block text-sm font-medium text-gray-700 mb-1"
+                                                    className="block text-sm font-semibold text-gray-700 mb-2"
                                                 >
                                                     Activity Name
                                                 </label>
                                                 <input
                                                     type="text"
                                                     id={`activity-name-${index}`}
-                                                    placeholder="Enter activity name"
+                                                    placeholder="e.g., Eiffel Tower Tour"
                                                     value={activity.name}
                                                     onChange={(e) =>
                                                         handleActivityChange(
@@ -682,13 +676,13 @@ const AdminDestinations = () => {
                                                             "name"
                                                         )
                                                     }
-                                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-sm"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-sm bg-gray-50 hover:bg-white placeholder-gray-400"
                                                 />
                                             </div>
                                             <div>
                                                 <label
                                                     htmlFor={`activity-image-${index}`}
-                                                    className="block text-sm font-medium text-gray-700 mb-1"
+                                                    className="block text-sm font-semibold text-gray-700 mb-2"
                                                 >
                                                     Activity Image
                                                 </label>
@@ -704,7 +698,7 @@ const AdminDestinations = () => {
                                                             "image"
                                                         )
                                                     }
-                                                    className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                                    className="w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 file:hover:bg-blue-100 file:shadow-sm file:transition-colors"
                                                 />
                                             </div>
                                         </div>
@@ -714,9 +708,10 @@ const AdminDestinations = () => {
                                                 onClick={() =>
                                                     removeActivity(index)
                                                 }
-                                                className="absolute top-2 right-2 text-red-500 hover:text-red-700 focus:outline-none"
+                                                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1 transition-colors"
+                                                aria-label="Remove activity"
                                             >
-                                                <TrashIcon className="h-5 w-5" />
+                                                <XIcon className="h-5 w-5" />
                                             </button>
                                         )}
                                     </div>
@@ -724,7 +719,7 @@ const AdminDestinations = () => {
                                 <button
                                     type="button"
                                     onClick={addActivity}
-                                    className="inline-flex items-center px-4 py-2 border border-blue-500 text-sm font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+                                    className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 shadow-sm"
                                 >
                                     <PlusIcon className="h-4 w-4 mr-2" />
                                     Add Another Activity
@@ -734,13 +729,13 @@ const AdminDestinations = () => {
                                 <button
                                     type="button"
                                     onClick={() => setIsAddModalOpen(false)}
-                                    className="px-6 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+                                    className="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 shadow-sm"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"
+                                    className="px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 shadow-sm"
                                 >
                                     Add Destination
                                 </button>

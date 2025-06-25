@@ -10,9 +10,10 @@ import {
     FilterIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { toast } from "react-toastify";
+
 import api from "@/lib/api";
 import { AppHook } from "@/context/AppProvider";
+import { toast } from "sonner";
 
 const Reservations = () => {
     const [upComingReservations, setUpComingReservations] = useState([]);
@@ -20,7 +21,6 @@ const Reservations = () => {
     const [filter, setFilter] = useState("upcoming");
     const [showFilters, setShowFilters] = useState(false);
     const { user } = AppHook();
-    // console.log(user);
 
     const fetchReservations = async () => {
         try {
@@ -37,13 +37,14 @@ const Reservations = () => {
     };
 
     useEffect(() => {
-        fetchReservations();
-    }, []);
+        if (user?.id) {
+            fetchReservations();
+        }
+    }, [user?.id]);
 
     const deleteReservation = async (id: number) => {
         try {
             await api.deleteReservation(id);
-            // Update state to remove the deleted reservation
             setUpComingReservations((prev) =>
                 prev.filter((reservation) => reservation.id !== id)
             );
@@ -54,12 +55,93 @@ const Reservations = () => {
         }
     };
 
+    const updateReservationStatus = async (id: number, newStatus: string) => {
+        try {
+            const updatedReservation = await api.updateReservation(id, {
+                status: newStatus,
+            });
+            if (newStatus === "Completed") {
+                // Find the reservation in upComingReservations to preserve its data
+                const currentReservation = upComingReservations.find(
+                    (reservation) => reservation.id === id
+                );
+                if (!currentReservation) {
+                    throw new Error("Reservation not found in upcoming list");
+                }
+                // Move reservation from upcoming to past
+                setUpComingReservations((prev) =>
+                    prev.filter((reservation) => reservation.id !== id)
+                );
+                // Normalize travel_details and other fields
+                const travelDetails = currentReservation.travel_details
+                    ? typeof currentReservation.travel_details === "string"
+                        ? JSON.parse(currentReservation.travel_details)
+                        : currentReservation.travel_details
+                    : { start_date: "N/A", end_date: "N/A", travelers: "N/A" };
+                const normalizedReservation = {
+                    ...updatedReservation,
+                    ...currentReservation,
+                    status: newStatus,
+                    travel_details: JSON.stringify(travelDetails),
+                    destination: currentReservation.destination ||
+                        updatedReservation.destination || { name: "Unknown" },
+                    image:
+                        currentReservation.image ||
+                        updatedReservation.image ||
+                        "default.jpg",
+                    payment_options:
+                        currentReservation.payment_options ||
+                        updatedReservation.payment_options ||
+                        "N/A",
+                    amount:
+                        currentReservation.amount ||
+                        updatedReservation.amount ||
+                        null,
+                    confirmation_code:
+                        currentReservation.confirmation_code ||
+                        updatedReservation.confirmation_code ||
+                        "N/A",
+                };
+                setPastReservations((prev) => [normalizedReservation, ...prev]);
+            } else {
+                // Update status in upcoming reservations
+                setUpComingReservations((prev) =>
+                    prev.map((reservation) =>
+                        reservation.id === id
+                            ? { ...reservation, status: newStatus }
+                            : reservation
+                    )
+                );
+            }
+            toast.success(`Reservation status updated to ${newStatus}!`);
+        } catch (error) {
+            toast.error(
+                "Failed to update reservation status. Please try again."
+            );
+            console.error("Error updating reservation status:", error);
+        }
+    };
+
+    const parseTravelDetails = (travelDetails) => {
+        try {
+            if (!travelDetails) {
+                return { start_date: "N/A", end_date: "N/A", travelers: "N/A" };
+            }
+            return typeof travelDetails === "string"
+                ? JSON.parse(travelDetails)
+                : travelDetails;
+        } catch (error) {
+            console.error("Error parsing travel_details:", error);
+            return { start_date: "N/A", end_date: "N/A", travelers: "N/A" };
+        }
+    };
+
     const displayedReservations =
         filter === "upcoming" ? upComingReservations : pastReservations;
 
     const getStatusBadgeColor = (status) => {
         switch (status) {
-            case "Confirmed":
+            case "Up Coming":
                 return "bg-green-100 text-green-800";
             case "Pending":
                 return "bg-yellow-100 text-yellow-800";
@@ -87,6 +169,8 @@ const Reservations = () => {
         }
     };
 
+    const statusOptions = ["Completed", "Pending", "Cancelled"];
+
     return (
         <div className="bg-gray-50 min-h-screen">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -102,7 +186,7 @@ const Reservations = () => {
                     <div className="mt-4 md:mt-0">
                         <Link
                             href="/destinations"
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
                         >
                             Book New Trip
                         </Link>
@@ -139,7 +223,7 @@ const Reservations = () => {
                                         onClick={() => setFilter("upcoming")}
                                         className={`px-3 py-2 font-medium text-sm rounded-md ${
                                             filter === "upcoming"
-                                                ? "bg-blue-100 text-blue-700"
+                                                ? "bg-blue-100 text-blue-blue-700"
                                                 : "text-gray-500 hover:text-gray-700"
                                         }`}
                                     >
@@ -161,7 +245,7 @@ const Reservations = () => {
                                 onClick={() => setShowFilters(!showFilters)}
                                 className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                             >
-                                <FilterIcon className="h-4 w-4 mr-1" />
+                                <FilterIcon className="h-4 w-4 mr-2" />
                                 Filters
                             </button>
                         </div>
@@ -201,7 +285,7 @@ const Reservations = () => {
                                             htmlFor="date-filter"
                                             className="block text-sm font-medium text-gray-700"
                                         >
-                                            Date Range
+                                            value
                                         </label>
                                         <input
                                             type="month"
@@ -210,7 +294,7 @@ const Reservations = () => {
                                         />
                                     </div>
                                     <div className="flex items-end">
-                                        <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <button className="w-full inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                             Apply Filters
                                         </button>
                                     </div>
@@ -226,7 +310,7 @@ const Reservations = () => {
                                         <div className="sm:w-1/4 mb-4 sm:mb-0">
                                             <div className="aspect-w-16 aspect-h-9 sm:aspect-w-4 sm:aspect-h-3">
                                                 <img
-                                                    src={`http://localhost:8000/storage/${reservation.destination?.image}`}
+                                                    src={`http://localhost:8000/storage/${reservation.destination.image}`}
                                                     alt={
                                                         reservation.destination
                                                             ?.name ||
@@ -268,7 +352,7 @@ const Reservations = () => {
                                                     <div>
                                                         {(() => {
                                                             const travel =
-                                                                JSON.parse(
+                                                                parseTravelDetails(
                                                                     reservation.travel_details
                                                                 );
                                                             return (
@@ -330,16 +414,68 @@ const Reservations = () => {
                                                             </Link>
                                                             {reservation.status !==
                                                                 "Cancelled" && (
-                                                                <button
-                                                                    onClick={() =>
-                                                                        deleteReservation(
-                                                                            reservation.id
-                                                                        )
-                                                                    }
-                                                                    className="inline-flex items-center px-3 py-1 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50"
-                                                                >
-                                                                    Cancel
-                                                                </button>
+                                                                <>
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            deleteReservation(
+                                                                                reservation.id
+                                                                            )
+                                                                        }
+                                                                        className="inline-flex items-center px-3 py-1 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50"
+                                                                    >
+                                                                        Cancel
+                                                                    </button>
+                                                                    <div className="relative inline-block text-left">
+                                                                        <select
+                                                                            onChange={(
+                                                                                e
+                                                                            ) =>
+                                                                                updateReservationStatus(
+                                                                                    reservation.id,
+                                                                                    e
+                                                                                        .target
+                                                                                        .value
+                                                                                )
+                                                                            }
+                                                                            className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
+                                                                            defaultValue=""
+                                                                        >
+                                                                            <option
+                                                                                value=""
+                                                                                disabled
+                                                                            >
+                                                                                Update
+                                                                                Status
+                                                                            </option>
+                                                                            {statusOptions
+                                                                                .filter(
+                                                                                    (
+                                                                                        status
+                                                                                    ) =>
+                                                                                        status !==
+                                                                                        reservation.status
+                                                                                )
+                                                                                .map(
+                                                                                    (
+                                                                                        status
+                                                                                    ) => (
+                                                                                        <option
+                                                                                            key={
+                                                                                                status
+                                                                                            }
+                                                                                            value={
+                                                                                                status
+                                                                                            }
+                                                                                        >
+                                                                                            {
+                                                                                                status
+                                                                                            }
+                                                                                        </option>
+                                                                                    )
+                                                                                )}
+                                                                        </select>
+                                                                    </div>
+                                                                </>
                                                             )}
                                                         </>
                                                     )}

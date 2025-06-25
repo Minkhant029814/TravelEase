@@ -36,6 +36,17 @@ interface Reservation {
     status: string;
 }
 const Dashboard = () => {
+    const { user } = AppHook();
+    if (!user || user.role !== "admin") {
+        return (
+            <div className="flex items-center justify-center h-screen">
+                <AlertTriangleIcon className="h-12 w-12 text-red-500" />
+                <p className="ml-2 text-lg text-gray-700">
+                    You do not have permission to access this page.
+                </p>
+            </div>
+        );
+    }
     // Calculate some statistics for the dashboard
 
     const [users, setUsers] = React.useState<User[]>([]);
@@ -43,7 +54,6 @@ const Dashboard = () => {
     const [reservations, setReservations] = React.useState<Reservation[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
-
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -70,17 +80,6 @@ const Dashboard = () => {
         fetchData();
     }, []);
 
-    const { user } = AppHook();
-    if (!user || user.role !== "admin") {
-        return (
-            <div className="flex items-center justify-center h-screen">
-                <AlertTriangleIcon className="h-12 w-12 text-red-500" />
-                <p className="ml-2 text-lg text-gray-700">
-                    You do not have permission to access this page.
-                </p>
-            </div>
-        );
-    }
     if (loading) {
         return (
             <AdminLayout>

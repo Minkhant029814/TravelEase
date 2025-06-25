@@ -15,6 +15,7 @@ import {
 
 import api from "@/lib/api";
 import { AppHook } from "@/context/AppProvider";
+import { toast } from "sonner";
 
 const DestinationDetail = () => {
     const params = useParams();
@@ -74,8 +75,7 @@ const DestinationDetail = () => {
                 },
                 confirmation_code: "w34244",
                 payment_options: paymentOption,
-                // amount: Math.round(destination.price * travelers * 1.1), // Including 10% service fee
-                amount: 1000,
+                amount: Math.round(destination?.amount * travelers * 1.1),
             };
             console.log(reservationData);
             const response = await api.createReservation(reservationData);
@@ -87,7 +87,8 @@ const DestinationDetail = () => {
                 setTravelers(1);
                 setPaymentOption("");
             }, 9000); // Reset form after 5 seconds
-            alert(
+
+            toast.success(
                 `Booking successful! Confirmation code: ${response.data.confirmation_code}`
             );
         } catch (error) {
@@ -247,7 +248,7 @@ const DestinationDetail = () => {
                             </h2>
                             <div className="mb-4">
                                 <span className="text-2xl font-bold text-blue-600">
-                                    ${destination.price}
+                                    ${destination.amount}
                                 </span>
                                 <span className="text-gray-600 text-sm">
                                     {" "}
@@ -414,13 +415,13 @@ const DestinationDetail = () => {
                                         <div className="border-t border-gray-200 pt-4">
                                             <div className="flex justify-between mb-2">
                                                 <span className="text-gray-600">
-                                                    ${destination.price} x{" "}
+                                                    ${destination.amount} x{" "}
                                                     {travelers} traveler
                                                     {travelers !== 1 ? "s" : ""}
                                                 </span>
                                                 <span className="font-medium">
                                                     $
-                                                    {destination.price *
+                                                    {destination.amount *
                                                         travelers}
                                                 </span>
                                             </div>
@@ -431,7 +432,7 @@ const DestinationDetail = () => {
                                                 <span className="font-medium">
                                                     $
                                                     {Math.round(
-                                                        destination.price *
+                                                        destination.amount *
                                                             travelers *
                                                             0.1
                                                     )}
@@ -442,7 +443,7 @@ const DestinationDetail = () => {
                                                 <span>
                                                     $
                                                     {Math.round(
-                                                        destination.price *
+                                                        destination.amount *
                                                             travelers *
                                                             1.1
                                                     )}

@@ -15,7 +15,7 @@ import { AppHook } from "@/context/AppProvider";
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     // const [isLoggedIn, setIsLoggedIn] = useState(true); // This would come from your auth context in a real app
-    const { logout, authToken } = AppHook();
+    const { logout, authToken, user } = AppHook();
 
     return (
         <nav className="bg-white shadow-sm">
@@ -69,13 +69,23 @@ const Navbar = () => {
                                     My Trips
                                 </Link>
 
-                                <Link
-                                    href="/userDashboard"
-                                    className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
-                                >
-                                    <UserIcon className="h-5 w-5 mr-1" />
-                                    Dashboard
-                                </Link>
+                                {user?.role === "admin" ? (
+                                    <Link
+                                        href="/testingAdmin/dashboard"
+                                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
+                                    >
+                                        <UserIcon className="h-5 w-5 mr-1" />
+                                        Dashboard
+                                    </Link>
+                                ) : (
+                                    <Link
+                                        href="/userDashboard"
+                                        className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900"
+                                    >
+                                        <UserIcon className="h-5 w-5 mr-1" />
+                                        Dashboard
+                                    </Link>
+                                )}
 
                                 <button className="bg-red-800" onClick={logout}>
                                     logout

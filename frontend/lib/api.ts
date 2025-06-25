@@ -35,6 +35,7 @@ export default {
     updateDestination: (id: number, data: FormData) =>
         api.put(`/destinations/${id}`, data),
     deleteDestination: (id: number) => api.delete(`/destinations/${id}`),
+    getFeaturedDestinations: () => api.get("featuredDestinations"),
 
     //  Activities
     getActivities: () => api.get("/activities"),
