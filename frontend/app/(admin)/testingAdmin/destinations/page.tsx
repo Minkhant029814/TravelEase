@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { PlusIcon, PencilIcon, TrashIcon, StarIcon } from "lucide-react";
+import { PlusIcon, PencilIcon, TrashIcon, StarIcon, XIcon } from "lucide-react";
 import AdminLayout from "../Layout";
 import api from "@/lib/api";
 import { AppHook } from "@/context/AppProvider";
@@ -8,6 +8,8 @@ import { AppHook } from "@/context/AppProvider";
 interface Activity {
     id: number;
     name: string;
+    image: string | null;
+    destination_id: number;
 }
 
 interface Review {
@@ -25,6 +27,7 @@ interface Destination {
     name: string;
     sort_by: string;
     description: string;
+    amount: number;
     image: string | null;
     user_id: number;
     user: User;
@@ -43,9 +46,10 @@ const AdminDestinations = () => {
         name: "",
         sort_by: "",
         description: "",
-        image: "",
+        image: null as File | null,
         user_id: 0,
-        activities: [{ name: "" }],
+        amount: 0,
+        activities: [{ id: 0, name: "", image: null as File | null }],
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -72,13 +76,22 @@ const AdminDestinations = () => {
 
     useEffect(() => {
         if (isAddModalOpen && addModalRef.current) {
-            addModalRef.current.focus();
+            const firstInput = addModalRef.current.querySelector(
+                "input, textarea"
+            ) as HTMLInputElement | HTMLTextAreaElement | null;
+            firstInput?.focus();
         }
         if (isEditModalOpen && editModalRef.current) {
-            editModalRef.current.focus();
+            const firstInput = editModalRef.current.querySelector(
+                "input, textarea"
+            ) as HTMLInputElement | HTMLTextAreaElement | null;
+            firstInput?.focus();
         }
         if (isDeleteModalOpen && deleteModalRef.current) {
-            deleteModalRef.current.focus();
+            const firstButton = deleteModalRef.current.querySelector(
+                "button"
+            ) as HTMLButtonElement | null;
+            firstButton?.focus();
         }
     }, [isAddModalOpen, isEditModalOpen, isDeleteModalOpen]);
 
@@ -92,12 +105,25 @@ const AdminDestinations = () => {
         });
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] || null;
+        setFormData({
+            ...formData,
+            image: file,
+        });
+    };
+
     const handleActivityChange = (
         e: React.ChangeEvent<HTMLInputElement>,
-        index: number
+        index: number,
+        field: "name" | "image"
     ) => {
         const newActivities = [...formData.activities];
-        newActivities[index].name = e.target.value;
+        if (field === "name") {
+            newActivities[index].name = e.target.value;
+        } else if (field === "image") {
+            newActivities[index].image = e.target.files?.[0] || null;
+        }
         setFormData({
             ...formData,
             activities: newActivities,
@@ -107,7 +133,10 @@ const AdminDestinations = () => {
     const addActivity = () => {
         setFormData({
             ...formData,
-            activities: [...formData.activities, { name: "" }],
+            activities: [
+                ...formData.activities,
+                { id: 0, name: "", image: null },
+            ],
         });
     };
 
@@ -116,7 +145,9 @@ const AdminDestinations = () => {
         setFormData({
             ...formData,
             activities:
-                newActivities.length > 0 ? newActivities : [{ name: "" }],
+                newActivities.length > 0
+                    ? newActivities
+                    : [{ id: 0, name: "", image: null }],
         });
     };
 
@@ -125,9 +156,10 @@ const AdminDestinations = () => {
             name: "",
             sort_by: "",
             description: "",
-            image: "",
+            amount: 0,
+            image: null,
             user_id: user?.id || 0,
-            activities: [{ name: "" }],
+            activities: [{ id: 0, name: "", image: null }],
         });
         setIsAddModalOpen(true);
     };
@@ -138,12 +170,17 @@ const AdminDestinations = () => {
             name: destination.name,
             sort_by: destination.sort_by,
             description: destination.description,
-            image: destination.image || "",
+            amount: destination.amount,
+            image: null,
             user_id: destination.user_id,
             activities:
                 destination.activities.length > 0
-                    ? destination.activities.map((act) => ({ name: act.name }))
-                    : [{ name: "" }],
+                    ? destination.activities.map((act) => ({
+                          id: act.id,
+                          name: act.name,
+                          image: null,
+                      }))
+                    : [{ id: 0, name: "", image: null }],
         });
         setIsEditModalOpen(true);
     };
@@ -156,18 +193,67 @@ const AdminDestinations = () => {
     const handleAddDestination = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            console.log(formData);
-            const response = await api.createDestination({
-                ...formData,
-                activities: formData.activities.filter(
-                    (act) => act.name.trim() !== ""
-                ),
-            });
-            setDestinationList([...destinationList, response.data]);
+            setError(null);
+            const formDataToSend = new FormData();
+            formDataToSend.append("name", formData.name);
+            formDataToSend.append("sort_by", formData.sort_by);
+            formDataToSend.append("description", formData.description);
+            formDataToSend.append("user_id", formData.user_id.toString());
+            formDataToSend.append("amount", formData.amount.toString());
+            if (formData.image) {
+                formDataToSend.append("image", formData.image);
+            }
+
+            // Create destination
+            const newDestination = await api.createDestination(formDataToSend);
+
+            if (!newDestination || !newDestination.id) {
+                throw new Error(
+                    "Failed to create destination: Invalid response"
+                );
+            }
+
+            // Create activities
+            const filteredActivities = formData.activities.filter(
+                (act) => act.name.trim() !== ""
+            );
+            console.log("Activities to create:", filteredActivities); // Debug log
+            for (const activity of filteredActivities) {
+                const activityFormData = new FormData();
+                activityFormData.append(
+                    "destination_id",
+                    newDestination.id.toString()
+                );
+                activityFormData.append("name", activity.name);
+                if (activity.image) {
+                    activityFormData.append("image", activity.image);
+                }
+                try {
+                    await api.createActivity(activityFormData);
+                } catch (activityErr: any) {
+                    console.error(
+                        `Failed to create activity "${activity.name}":`,
+                        activityErr
+                    );
+                    throw new Error(
+                        `Failed to create activity "${activity.name}": ${
+                            activityErr.message || "Unknown error"
+                        }`
+                    );
+                }
+            }
+
+            // Refresh destination list
+            const updatedDestinations = await api.getDestinations();
+            setDestinationList(updatedDestinations.data);
             setIsAddModalOpen(false);
-        } catch (err) {
-            setError("Failed to add destination");
-            console.error(err);
+        } catch (err: any) {
+            const errorMessage =
+                err.response?.data?.message ||
+                err.message ||
+                "Failed to add destination or activities";
+            setError(errorMessage);
+            console.error("Error in handleAddDestination:", err);
         }
     };
 
@@ -175,29 +261,57 @@ const AdminDestinations = () => {
         e.preventDefault();
         if (!currentDestination) return;
         try {
-            const response = await api.updateDestination(
-                currentDestination.id,
-                {
-                    ...formData,
-                    activities: formData.activities.filter(
-                        (act) => act.name.trim() !== ""
-                    ),
+            setError(null);
+            // Update destination
+            const formDataToSend = new FormData();
+            formDataToSend.append("name", formData.name);
+            formDataToSend.append("sort_by", formData.sort_by);
+            formDataToSend.append("description", formData.description);
+            formDataToSend.append("user_id", formData.user_id.toString());
+            if (formData.image) {
+                formDataToSend.append("image", formData.image);
+            }
+            await api.updateDestination(currentDestination.id, formDataToSend);
+
+            // Handle activities
+            const filteredActivities = formData.activities.filter(
+                (act) => act.name.trim() !== ""
+            );
+            for (const activity of filteredActivities) {
+                const activityFormData = new FormData();
+                activityFormData.append(
+                    "destination_id",
+                    currentDestination.id.toString()
+                );
+                activityFormData.append("name", activity.name);
+                if (activity.image) {
+                    activityFormData.append("image", activity.image);
                 }
-            );
-            const updatedDestinations = destinationList.map((dest) =>
-                dest.id === currentDestination.id ? response.data : dest
-            );
-            setDestinationList(updatedDestinations);
+                if (activity.id) {
+                    await api.updateActivity(activity.id, activityFormData);
+                } else {
+                    await api.createActivity(activityFormData);
+                }
+            }
+
+            // Refresh destination list
+            const updatedDestinations = await api.getDestinations();
+            setDestinationList(updatedDestinations.data);
             setIsEditModalOpen(false);
-        } catch (err) {
-            setError("Failed to update destination");
-            console.error(err);
+        } catch (err: any) {
+            const errorMessage =
+                err.response?.data?.message ||
+                err.message ||
+                "Failed to update destination or activities";
+            setError(errorMessage);
+            console.error("Error in handleEditDestination:", err);
         }
     };
 
     const handleDeleteDestination = async () => {
         if (!currentDestination) return;
         try {
+            setError(null);
             await api.deleteDestination(currentDestination.id);
             setDestinationList(
                 destinationList.filter(
@@ -205,9 +319,13 @@ const AdminDestinations = () => {
                 )
             );
             setIsDeleteModalOpen(false);
-        } catch (err) {
-            setError("Failed to delete destination");
-            console.error(err);
+        } catch (err: any) {
+            const errorMessage =
+                err.response?.data?.message ||
+                err.message ||
+                "Failed to delete destination";
+            setError(errorMessage);
+            console.error("Error in handleDeleteDestination:", err);
         }
     };
 
@@ -235,7 +353,7 @@ const AdminDestinations = () => {
         return (
             <AdminLayout>
                 <div className="flex items-center justify-center h-screen">
-                    <p className="text-lg text-gray-600">{error}</p>
+                    <p className="text-lg text-red-600">{error}</p>
                 </div>
             </AdminLayout>
         );
@@ -355,20 +473,41 @@ const AdminDestinations = () => {
                                                                           .reviews
                                                                           .length
                                                                   ).toFixed(1)
-                                                                : "N/A"}
+                                                                : "0.0"}
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <td className="px-6 py-4 text-sm text-gray-500">
                                                     {destination.activities &&
                                                     destination.activities
                                                         .length > 0
-                                                        ? destination.activities
-                                                              .map(
-                                                                  (act) =>
-                                                                      act.name
+                                                        ? destination.activities.map(
+                                                              (act) => (
+                                                                  <div
+                                                                      key={
+                                                                          act.id
+                                                                      }
+                                                                      className="flex items-center mb-2"
+                                                                  >
+                                                                      <span>
+                                                                          {
+                                                                              act.name
+                                                                          }
+                                                                      </span>
+                                                                      {act.image && (
+                                                                          <img
+                                                                              src={
+                                                                                  act.image
+                                                                              }
+                                                                              alt={
+                                                                                  act.name
+                                                                              }
+                                                                              className="ml-2 h-6 w-6 object-cover rounded"
+                                                                          />
+                                                                      )}
+                                                                  </div>
                                                               )
-                                                              .join(", ")
+                                                          )
                                                         : "None"}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -404,29 +543,42 @@ const AdminDestinations = () => {
             </div>
             {isAddModalOpen && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                    className="fixed inset-0 z-50 flex items-center justify-center"
                     onClick={() => setIsAddModalOpen(false)}
                 >
                     <div
                         ref={addModalRef}
-                        className="relative bg-white rounded-lg px-4 pt-5 pb-4 shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full sm:p-6"
+                        className="relative bg-white rounded-xl p-8 shadow-2xl transform transition-all max-w-lg w-full mx-4 sm:mx-0 max-h-[90vh] overflow-y-auto"
                         onClick={(e) => e.stopPropagation()}
-                        tabIndex={-1}
                     >
-                        <div className="mt-3 sm:mt-0 sm:text-left">
-                            <h3 className="text-lg leading-6 font-medium text-gray-900">
-                                Add New Destination
-                            </h3>
-                            <form
-                                onSubmit={handleAddDestination}
-                                className="mt-4 space-y-4"
-                            >
+                        <button
+                            type="button"
+                            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1 transition-colors"
+                            onClick={() => setIsAddModalOpen(false)}
+                            aria-label="Close modal"
+                        >
+                            <XIcon className="h-6 w-6" />
+                        </button>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                            Add New Destination
+                        </h3>
+                        {error && (
+                            <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg text-sm border border-red-200">
+                                {error}
+                            </div>
+                        )}
+                        <form
+                            onSubmit={handleAddDestination}
+                            className="space-y-6"
+                            encType="multipart/form-data"
+                        >
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div>
                                     <label
                                         htmlFor="name"
-                                        className="block text-sm font-medium text-gray-700"
+                                        className="block text-sm font-semibold text-gray-700 mb-2"
                                     >
-                                        Name
+                                        Destination Name
                                     </label>
                                     <input
                                         type="text"
@@ -435,122 +587,160 @@ const AdminDestinations = () => {
                                         value={formData.name}
                                         onChange={handleInputChange}
                                         required
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                        autoFocus
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-sm bg-gray-50 hover:bg-white placeholder-gray-400"
+                                        placeholder="e.g., Paris"
                                     />
                                 </div>
                                 <div>
                                     <label
-                                        htmlFor="sort_by"
-                                        className="block text-sm font-medium text-gray-700"
+                                        htmlFor="amount"
+                                        className="block text-sm font-semibold text-gray-700 mb-2"
                                     >
-                                        Region
+                                        Amount
                                     </label>
                                     <input
                                         type="text"
-                                        name="sort_by"
-                                        id="sort_by"
-                                        value={formData.sort_by}
+                                        name="amount"
+                                        id="amount"
+                                        value={formData.amount}
                                         onChange={handleInputChange}
                                         required
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-sm bg-gray-50 hover:bg-white placeholder-gray-400"
+                                        placeholder="e.g., $500"
                                     />
                                 </div>
-                                <div>
-                                    <label
-                                        htmlFor="description"
-                                        className="block text-sm font-medium text-gray-700"
+                            </div>
+                            <div>
+                                <label
+                                    htmlFor="description"
+                                    className="block text-sm font-semibold text-gray-700 mb-2"
+                                >
+                                    Description
+                                </label>
+                                <textarea
+                                    name="description"
+                                    id="description"
+                                    rows={4}
+                                    value={formData.description}
+                                    onChange={handleInputChange}
+                                    required
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-sm bg-gray-50 hover:bg-white placeholder-gray-400 resize-none"
+                                    placeholder="Describe the destination"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                    htmlFor="image"
+                                    className="block text-sm font-semibold text-gray-700 mb-2"
+                                >
+                                    Destination Image
+                                </label>
+                                <input
+                                    type="file"
+                                    name="image"
+                                    id="image"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                    className="w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 file:hover:bg-blue-100 file:shadow-sm file:transition-colors"
+                                />
+                            </div>
+                            <div className="border-t border-gray-200 pt-6">
+                                <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                                    Activities
+                                </h4>
+                                {formData.activities.map((activity, index) => (
+                                    <div
+                                        key={index}
+                                        className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm relative"
                                     >
-                                        Description
-                                    </label>
-                                    <textarea
-                                        name="description"
-                                        id="description"
-                                        rows={3}
-                                        value={formData.description}
-                                        onChange={handleInputChange}
-                                        required
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label
-                                        htmlFor="image"
-                                        className="block text-sm font-medium text-gray-700"
-                                    >
-                                        Image URL
-                                    </label>
-                                    <input
-                                        type="url"
-                                        name="image"
-                                        id="image"
-                                        value={formData.image}
-                                        onChange={handleInputChange}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Activities
-                                    </label>
-                                    {formData.activities.map(
-                                        (activity, index) => (
-                                            <div
-                                                key={index}
-                                                className="flex mt-1"
-                                            >
+                                        <h5 className="text-sm font-semibold text-gray-700 mb-2">
+                                            Activity {index + 1}
+                                        </h5>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label
+                                                    htmlFor={`activity-name-${index}`}
+                                                    className="block text-sm font-semibold text-gray-700 mb-2"
+                                                >
+                                                    Activity Name
+                                                </label>
                                                 <input
                                                     type="text"
+                                                    id={`activity-name-${index}`}
+                                                    placeholder="e.g., Eiffel Tower Tour"
                                                     value={activity.name}
                                                     onChange={(e) =>
                                                         handleActivityChange(
                                                             e,
-                                                            index
+                                                            index,
+                                                            "name"
                                                         )
                                                     }
-                                                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-sm bg-gray-50 hover:bg-white placeholder-gray-400"
                                                 />
-                                                {index > 0 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            removeActivity(
-                                                                index
-                                                            )
-                                                        }
-                                                        className="ml-2 inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                                    >
-                                                        <TrashIcon className="h-4 w-4" />
-                                                    </button>
-                                                )}
                                             </div>
-                                        )
-                                    )}
-                                    <button
-                                        type="button"
-                                        onClick={addActivity}
-                                        className="mt-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                    >
-                                        Add Activity
-                                    </button>
-                                </div>
-                                <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsAddModalOpen(false)}
-                                        className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:text-sm"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
-                                    >
-                                        Add Destination
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+                                            <div>
+                                                <label
+                                                    htmlFor={`activity-image-${index}`}
+                                                    className="block text-sm font-semibold text-gray-700 mb-2"
+                                                >
+                                                    Activity Image
+                                                </label>
+                                                <input
+                                                    type="file"
+                                                    name="image"
+                                                    id={`activity-image-${index}`}
+                                                    accept="image/*"
+                                                    onChange={(e) =>
+                                                        handleActivityChange(
+                                                            e,
+                                                            index,
+                                                            "image"
+                                                        )
+                                                    }
+                                                    className="w-full text-sm text-gray-600 file:mr-4 file:py-3 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 file:hover:bg-blue-100 file:shadow-sm file:transition-colors"
+                                                />
+                                            </div>
+                                        </div>
+                                        {index > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    removeActivity(index)
+                                                }
+                                                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1 transition-colors"
+                                                aria-label="Remove activity"
+                                            >
+                                                <XIcon className="h-5 w-5" />
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                                <button
+                                    type="button"
+                                    onClick={addActivity}
+                                    className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 shadow-sm"
+                                >
+                                    <PlusIcon className="h-4 w-4 mr-2" />
+                                    Add Another Activity
+                                </button>
+                            </div>
+                            <div className="flex justify-end space-x-4 pt-6">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAddModalOpen(false)}
+                                    className="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 shadow-sm"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 shadow-sm"
+                                >
+                                    Add Destination
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
@@ -563,7 +753,6 @@ const AdminDestinations = () => {
                         ref={editModalRef}
                         className="relative bg-white rounded-lg px-4 pt-5 pb-4 shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full sm:p-6"
                         onClick={(e) => e.stopPropagation()}
-                        tabIndex={-1}
                     >
                         <div className="mt-3 sm:mt-0 sm:text-left">
                             <h3 className="text-lg leading-6 font-medium text-gray-900">
@@ -572,6 +761,7 @@ const AdminDestinations = () => {
                             <form
                                 onSubmit={handleEditDestination}
                                 className="mt-4 space-y-4"
+                                encType="multipart/form-data"
                             >
                                 <div>
                                     <label
@@ -588,7 +778,6 @@ const AdminDestinations = () => {
                                         onChange={handleInputChange}
                                         required
                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                        autoFocus
                                     />
                                 </div>
                                 <div>
@@ -630,16 +819,28 @@ const AdminDestinations = () => {
                                         htmlFor="image"
                                         className="block text-sm font-medium text-gray-700"
                                     >
-                                        Image URL
+                                        Destination Image
                                     </label>
                                     <input
-                                        type="url"
+                                        type="file"
                                         name="image"
                                         id="image"
-                                        value={formData.image}
-                                        onChange={handleInputChange}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                     />
+                                    {currentDestination.image && (
+                                        <div className="mt-2">
+                                            <p className="text-sm text-gray-600">
+                                                Current Image:
+                                            </p>
+                                            <img
+                                                src={currentDestination.image}
+                                                alt="Current destination"
+                                                className="h-20 w-20 object-cover rounded"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
@@ -649,39 +850,83 @@ const AdminDestinations = () => {
                                         (activity, index) => (
                                             <div
                                                 key={index}
-                                                className="flex mt-1"
+                                                className="mt-2 space-y-2"
                                             >
+                                                <div className="flex items-center">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Activity name"
+                                                        value={activity.name}
+                                                        onChange={(e) =>
+                                                            handleActivityChange(
+                                                                e,
+                                                                index,
+                                                                "name"
+                                                            )
+                                                        }
+                                                        className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                                    />
+                                                    {index > 0 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                removeActivity(
+                                                                    index
+                                                                )
+                                                            }
+                                                            className="ml-2 inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                        >
+                                                            <TrashIcon className="h-4 w-4" />
+                                                        </button>
+                                                    )}
+                                                </div>
                                                 <input
-                                                    type="text"
-                                                    value={activity.name}
+                                                    type="file"
+                                                    name="image"
+                                                    id={`activity-image-${index}`}
+                                                    accept="image/*"
                                                     onChange={(e) =>
                                                         handleActivityChange(
                                                             e,
-                                                            index
+                                                            index,
+                                                            "image"
                                                         )
                                                     }
-                                                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                                    className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                                 />
-                                                {index > 0 && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            removeActivity(
-                                                                index
-                                                            )
-                                                        }
-                                                        className="ml-2 inline-flex items-center p-1 border border-transparent rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                                    >
-                                                        <TrashIcon className="h-4 w-4" />
-                                                    </button>
-                                                )}
+                                                {activity.id &&
+                                                    currentDestination.activities.find(
+                                                        (act) =>
+                                                            act.id ===
+                                                            activity.id
+                                                    )?.image && (
+                                                        <div className="mt-2">
+                                                            <p className="text-sm text-gray-600">
+                                                                Current Activity
+                                                                Image:
+                                                            </p>
+                                                            <img
+                                                                src={
+                                                                    currentDestination.activities.find(
+                                                                        (act) =>
+                                                                            act.id ===
+                                                                            activity.id
+                                                                    )?.image
+                                                                }
+                                                                alt={
+                                                                    activity.name
+                                                                }
+                                                                className="h-20 w-20 object-cover rounded"
+                                                            />
+                                                        </div>
+                                                    )}
                                             </div>
                                         )
                                     )}
                                     <button
                                         type="button"
                                         onClick={addActivity}
-                                        className="mt-2 inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                        className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-blue-700 bg-blue-100 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                     >
                                         Add Activity
                                     </button>
@@ -698,7 +943,7 @@ const AdminDestinations = () => {
                                     </button>
                                     <button
                                         type="submit"
-                                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
+                                        className="w-full inline-flex justify-center rounded-md shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
                                     >
                                         Save Changes
                                     </button>
@@ -717,7 +962,6 @@ const AdminDestinations = () => {
                         ref={deleteModalRef}
                         className="relative bg-white rounded-lg px-4 pt-5 pb-4 shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full sm:p-6"
                         onClick={(e) => e.stopPropagation()}
-                        tabIndex={-1}
                     >
                         <div className="sm:flex sm:items-start">
                             <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
@@ -740,7 +984,7 @@ const AdminDestinations = () => {
                             <button
                                 type="button"
                                 onClick={handleDeleteDestination}
-                                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                                className="w-full inline-flex justify-center rounded-md shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
                             >
                                 Delete
                             </button>

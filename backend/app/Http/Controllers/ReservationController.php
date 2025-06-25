@@ -62,13 +62,13 @@ class ReservationController extends Controller
 
     public function upComingTrips($user_id): JsonResponse
     {
-        $reservation = Reservation::with('user', 'destination')->where('status', 'Completed')->where('user_id', $user_id)->get();
+        $reservation = Reservation::with('user', 'destination')->where('status', 'Up Coming')->where('user_id', $user_id)->get();
         return response()->json($reservation, 200);
     }
 
     public function pastTrips($user_id): JsonResponse
     {
-        $reservation = Reservation::with('user', 'destination')->where('status', 'Confirmed')->where('user_id', $user_id)->get();
+        $reservation = Reservation::with('user', 'destination')->where('status', 'Completed')->where('user_id', $user_id)->get();
         return response()->json($reservation, 200);
     }
 }

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->json('travel_details');
             $table->string('payment_options');
             $table->string('confirmation_code')->nullable();
-            $table->string('status')->default('Completed');
+            $table->string('status')->default('Up Coming');
             $table->string('amount')->nullable();
             $table->timestamps();
         });

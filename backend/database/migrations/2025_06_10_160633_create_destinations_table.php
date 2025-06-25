@@ -17,10 +17,10 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('sort_by')->default('desc');
             $table->text('description');
+            $table->integer('amount');
             $table->string('image')->nullable();
             $table->timestamps();
         });
-
     }
 
     /**

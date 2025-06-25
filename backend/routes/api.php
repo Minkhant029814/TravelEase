@@ -36,7 +36,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('activities', ActivityController::class);
     Route::apiResource('travel_tips', TravelTipController::class);
 
-    Route::apiResource('destinations', DestinationController::class);
 
     Route::get('reservations/upComing/{user_id}', [ReservationController::class, 'upComingTrips']);
 
@@ -52,3 +51,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('reviews', ReviewController::class);
     Route::apiResource('notifications', NotificationController::class);
 });
+
+Route::apiResource('destinations', DestinationController::class);
+Route::get('/featuredDestinations', [DestinationController::class, 'getFeaturedDestinations']);
