@@ -128,9 +128,9 @@ const Destinations = () => {
                                     Activities
                                 </h3>
                                 <div className="space-y-2">
-                                    {allActivities.map((activity) => (
+                                    {allActivities.map((activity, index) => (
                                         <div
-                                            key={activity}
+                                            key={index}
                                             className="flex items-center"
                                         >
                                             <input
@@ -212,9 +212,12 @@ const Destinations = () => {
                                         </p>
                                         <div className="mt-4 flex flex-wrap gap-2">
                                             {destination.activities.map(
-                                                (activity: string) => (
+                                                (
+                                                    activity: string,
+                                                    index: number
+                                                ) => (
                                                     <span
-                                                        key={activity}
+                                                        key={index}
                                                         className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                                                     >
                                                         {activity}
