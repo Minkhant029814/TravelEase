@@ -93,7 +93,7 @@ const FeaturedDestinations = () => {
                                         {destination.name}
                                     </h3>
                                 </div>
-                                <p className="mt-2 text-sm text-gray-500">
+                                <p className="mt-2 text-sm text-gray-500 line-clamp-3">
                                     {destination.description}
                                 </p>
                                 <div className="mt-4 flex justify-between items-center">

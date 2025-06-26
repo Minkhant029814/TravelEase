@@ -53,6 +53,8 @@ class DestinationController extends Controller
                 // Manually extract each activity from the request
                 $activity = [
                     'name' => $activityInput['name'],
+                    'description' => $activityInput['description'],
+                    'category' => $activityInput['category'],
                     'destination_id' => $destination->id,
                 ];
 

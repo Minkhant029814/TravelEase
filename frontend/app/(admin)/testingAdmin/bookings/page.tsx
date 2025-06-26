@@ -272,7 +272,7 @@ const AdminBookings = () => {
                                                 return (
                                                     <tr key={reservation.id}>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            #{reservation.id}
+                                                            {reservation.id}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="text-sm font-medium text-gray-900">
@@ -398,7 +398,7 @@ const AdminBookings = () => {
             </div>
             {isViewModalOpen && currentReservation && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                    className="fixed inset-0 z-50 flex items-center justify-center shadow:lg"
                     onClick={() => setIsViewModalOpen(false)}
                 >
                     <div
@@ -418,7 +418,7 @@ const AdminBookings = () => {
                                             Reservation ID
                                         </dt>
                                         <dd className="mt-1 text-sm text-gray-900">
-                                            #{currentReservation.id}
+                                            {currentReservation.id}
                                         </dd>
                                     </div>
                                     <div>

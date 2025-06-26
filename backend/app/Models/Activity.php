@@ -8,9 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Activity extends Model
 {
     protected $fillable = [
-        'destination_id','name','image'
+        'destination_id',
+        'name',
+        'description',
+        'category',
+        'image'
     ];
-    public function destination() : BelongsTo {
+    public function destination(): BelongsTo
+    {
         return $this->belongsTo(Destination::class);
     }
 }

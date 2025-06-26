@@ -120,13 +120,8 @@ const ReservationDetail = () => {
                                         <MailIcon className="h-4 w-4 mr-2" />
                                         Email
                                     </button>
-                                    <Link
-                                        href={`/reservations/${reservation.id}/edit`}
-                                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                                    >
-                                        Modify Booking
-                                    </Link>
-                                    {reservation.status !== "Cancelled" && (
+
+                                    {/* {reservation.status !== "Cancelled" && (
                                         <button
                                             className="inline-flex items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50"
                                             onClick={() =>
@@ -135,7 +130,7 @@ const ReservationDetail = () => {
                                         >
                                             Cancel Booking
                                         </button>
-                                    )}
+                                    )} */}
                                 </div>
                             </div>
                             <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

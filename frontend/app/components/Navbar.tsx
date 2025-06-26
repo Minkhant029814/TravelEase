@@ -9,13 +9,19 @@ import {
     GlobeIcon,
     HeartIcon,
     HelpCircleIcon,
+    Map,
+    Globe,
+    Compass,
+    Route,
 } from "lucide-react";
 import Link from "next/link";
 import { AppHook } from "@/context/AppProvider";
+import { usePathname } from "next/navigation";
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     // const [isLoggedIn, setIsLoggedIn] = useState(true); // This would come from your auth context in a real app
     const { logout, authToken, user } = AppHook();
+    const pathname = usePathname();
 
     return (
         <nav className="bg-white shadow-sm">
@@ -26,7 +32,9 @@ const Navbar = () => {
                             href="/"
                             className="flex-shrink-0 flex items-center"
                         >
-                            <GlobeIcon className="h-8 w-8 text-blue-600" />
+                            {/* <GlobeIcon className="h-8 w-8 text-blue-600" /> */}
+                            <Map />
+
                             <span className="ml-2 text-xl font-bold text-gray-900">
                                 TravelEase
                             </span>
@@ -35,25 +43,41 @@ const Navbar = () => {
                         <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                             <Link
                                 href="/"
-                                className="border-transparent text-gray-500 hover:border-blue-500 hover:text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                                    pathname === "/"
+                                        ? "border-blue-500 text-gray-900"
+                                        : "border-transparent text-gray-500 hover:border-blue-500 hover:text-gray-900"
+                                }`}
                             >
                                 Home
                             </Link>
                             <Link
                                 href="/destinations"
-                                className="border-transparent text-gray-500 hover:border-blue-500 hover:text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                                    pathname === "/destinations"
+                                        ? "border-blue-500 text-gray-900"
+                                        : "border-transparent text-gray-500 hover:border-blue-500 hover:text-gray-900"
+                                }`}
                             >
                                 Destinations
                             </Link>
                             <Link
                                 href="/travel-tips"
-                                className="border-transparent text-gray-500 hover:border-blue-500 hover:text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                                    pathname === "/travel-tips"
+                                        ? "border-blue-500 text-gray-900"
+                                        : "border-transparent text-gray-500 hover:border-blue-500 hover:text-gray-900"
+                                }`}
                             >
                                 Travel Tips
                             </Link>
                             <Link
                                 href="/support"
-                                className="border-transparent text-gray-500 hover:border-blue-500 hover:text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                                    pathname === "/support"
+                                        ? "border-blue-500 text-gray-900"
+                                        : "border-transparent text-gray-500 hover:border-blue-500 hover:text-gray-900"
+                                }`}
                             >
                                 Support
                             </Link>
@@ -87,8 +111,11 @@ const Navbar = () => {
                                     </Link>
                                 )}
 
-                                <button className="bg-red-800" onClick={logout}>
-                                    logout
+                                <button
+                                    onClick={logout}
+                                    className="ml-4 px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors duration-200"
+                                >
+                                    Logout
                                 </button>
                             </>
                         ) : (
