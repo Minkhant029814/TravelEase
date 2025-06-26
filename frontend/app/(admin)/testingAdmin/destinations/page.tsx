@@ -11,6 +11,8 @@ interface Activity {
     name: string;
     image: string | null;
     destination_id: number;
+    description: string;
+    category: string;
 }
 
 interface Review {
@@ -50,7 +52,15 @@ const AdminDestinations = () => {
         image: null as File | null,
         user_id: 0,
         amount: 0,
-        activities: [{ id: 0, name: "", image: null as File | null }],
+        activities: [
+            {
+                id: 0,
+                name: "",
+                image: null as File | null,
+                description: "",
+                category: "",
+            },
+        ],
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -117,13 +127,17 @@ const AdminDestinations = () => {
     const handleActivityChange = (
         e: React.ChangeEvent<HTMLInputElement>,
         index: number,
-        field: "name" | "image"
+        field: "name" | "image" | "description" | "category"
     ) => {
         const newActivities = [...formData.activities];
         if (field === "name") {
             newActivities[index].name = e.target.value;
         } else if (field === "image") {
             newActivities[index].image = e.target.files?.[0] || null;
+        } else if (field === "description") {
+            newActivities[index].description = e.target.value;
+        } else if (field === "category") {
+            newActivities[index].category = e.target.value;
         }
         setFormData({
             ...formData,
@@ -136,7 +150,7 @@ const AdminDestinations = () => {
             ...formData,
             activities: [
                 ...formData.activities,
-                { id: 0, name: "", image: null },
+                { id: 0, name: "", image: null, description: "", category: "" },
             ],
         });
     };
@@ -148,7 +162,15 @@ const AdminDestinations = () => {
             activities:
                 newActivities.length > 0
                     ? newActivities
-                    : [{ id: 0, name: "", image: null }],
+                    : [
+                          {
+                              id: 0,
+                              name: "",
+                              image: null,
+                              description: "",
+                              category: "",
+                          },
+                      ],
         });
     };
 
@@ -160,7 +182,9 @@ const AdminDestinations = () => {
             amount: 0,
             image: null,
             user_id: user?.id || 0,
-            activities: [{ id: 0, name: "", image: null }],
+            activities: [
+                { id: 0, name: "", image: null, description: "", category: "" },
+            ],
         });
         setIsAddModalOpen(true);
     };
@@ -180,8 +204,18 @@ const AdminDestinations = () => {
                           id: act.id,
                           name: act.name,
                           image: null,
+                          description: act.description,
+                          category: act.category,
                       }))
-                    : [{ id: 0, name: "", image: null }],
+                    : [
+                          {
+                              id: 0,
+                              name: "",
+                              image: null,
+                              description: "",
+                              category: "",
+                          },
+                      ],
         });
         setIsEditModalOpen(true);
     };
@@ -204,6 +238,7 @@ const AdminDestinations = () => {
             if (formData.image) {
                 formDataToSend.append("image", formData.image);
             }
+            console.log("ddd" + formDataToSend);
 
             // Create destination
             const newDestination = await api.createDestination(formDataToSend);
@@ -229,6 +264,8 @@ const AdminDestinations = () => {
                 if (activity.image) {
                     activityFormData.append("image", activity.image);
                 }
+                activityFormData.append("description", activity.description);
+                activityFormData.append("category", activity.category);
                 try {
                     await api.createActivity(activityFormData);
                 } catch (activityErr: any) {
@@ -393,7 +430,7 @@ const AdminDestinations = () => {
                                                 scope="col"
                                                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                                             >
-                                                Region
+                                                Sort By
                                             </th>
                                             <th
                                                 scope="col"
@@ -681,6 +718,83 @@ const AdminDestinations = () => {
                                             </div>
                                             <div>
                                                 <label
+                                                    htmlFor={`activity-name-${index}`}
+                                                    className="block text-sm font-semibold text-gray-700 mb-2"
+                                                >
+                                                    Description
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    id={`activity-name-${index}`}
+                                                    placeholder="e.g., Eiffel Tower Tour"
+                                                    value={activity.description}
+                                                    onChange={(e) =>
+                                                        handleActivityChange(
+                                                            e,
+                                                            index,
+                                                            "description"
+                                                        )
+                                                    }
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 text-sm bg-gray-50 hover:bg-white placeholder-gray-400"
+                                                />
+                                            </div>
+                                            <div className="">
+                                                <label
+                                                    htmlFor={`activity-name-${index}`}
+                                                    className="block text-sm font-semibold text-gray-700 mb-2"
+                                                >
+                                                    Category
+                                                </label>
+                                                <select
+                                                    id="category"
+                                                    name="category"
+                                                    className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                                                    onChange={(e) =>
+                                                        handleActivityChange(
+                                                            e,
+                                                            index,
+                                                            "category"
+                                                        )
+                                                    }
+                                                >
+                                                    <option value="">
+                                                        Category
+                                                    </option>
+                                                    <option value="Culture">
+                                                        Culture
+                                                    </option>
+                                                    <option value="History">
+                                                        History
+                                                    </option>
+                                                    <option value="Beach">
+                                                        Beach
+                                                    </option>
+                                                    <option value="Adventure">
+                                                        Adventure
+                                                    </option>
+                                                    <option value="Nature">
+                                                        Nature
+                                                    </option>
+                                                    <option value="Urban">
+                                                        Urban
+                                                    </option>
+                                                    <option value="Food & Wine">
+                                                        Food & Wine
+                                                    </option>
+                                                    <option value="Outdoor">
+                                                        Outdoor
+                                                    </option>
+                                                    <option value="Night life">
+                                                        Night life
+                                                    </option>
+                                                    <option value="Relaxation">
+                                                        Relaxation
+                                                    </option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label
                                                     htmlFor={`activity-image-${index}`}
                                                     className="block text-sm font-semibold text-gray-700 mb-2"
                                                 >
@@ -785,7 +899,7 @@ const AdminDestinations = () => {
                                         htmlFor="sort_by"
                                         className="block text-sm font-medium text-gray-700"
                                     >
-                                        Region
+                                        Sort by
                                     </label>
                                     <input
                                         type="text"

@@ -38,7 +38,7 @@ const Destinations = () => {
                     image: dest.image,
 
                     activities: dest.activities
-                        ? dest.activities.map((a: any) => a.name)
+                        ? dest.activities.map((a: any) => a.category)
                         : [],
                 }));
                 setDestinationsData(data);
@@ -207,7 +207,7 @@ const Destinations = () => {
                                                 {destination.name}
                                             </h3>
                                         </div>
-                                        <p className="mt-2 text-sm text-gray-500">
+                                        <p className="mt-2 text-sm text-gray-500 line-clamp-3">
                                             {destination.description}
                                         </p>
                                         <div className="mt-4 flex flex-wrap gap-2">
@@ -218,7 +218,7 @@ const Destinations = () => {
                                                 ) => (
                                                     <span
                                                         key={index}
-                                                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                                                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 line-clamp-3"
                                                     >
                                                         {activity}
                                                     </span>

@@ -200,33 +200,35 @@ const DestinationDetail = () => {
                                 <h3 className="text-xl font-bold text-gray-900 mb-4">
                                     Reviews
                                 </h3>
-                                <div className="space-y-4">
+                                <div className="space-y-10 max-w-3xl mx-auto">
                                     {destination.reviews.map((review) => (
                                         <div
                                             key={review.id}
-                                            className="border-b border-gray-200 pb-4"
+                                            className="border border-gray-100 rounded-xl p-6 bg-gradient-to-br from-white to-gray-50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
                                         >
-                                            <div className="flex items-center justify-between">
-                                                <h4 className="text-lg font-medium text-gray-900">
-                                                    {review.user}
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                                <h4 className="text-xl font-bold text-gray-900 tracking-tight">
+                                                    {destination.user.name}
                                                 </h4>
-                                                <span className="text-sm text-gray-500">
+                                                <span className="text-sm text-gray-500 font-medium italic">
                                                     {review.date}
                                                 </span>
                                             </div>
-                                            <div className="flex items-center mt-1">
+
+                                            <div className="flex items-center mt-3 space-x-1">
                                                 {[...Array(5)].map((_, i) => (
                                                     <StarIcon
                                                         key={i}
-                                                        className={`h-5 w-5 ${
+                                                        className={`h-6 w-6 ${
                                                             i < review.rating
-                                                                ? "text-yellow-400"
-                                                                : "text-gray-300"
-                                                        }`}
+                                                                ? "text-amber-400 fill-current"
+                                                                : "text-gray-200"
+                                                        } transform transition-transform duration-200 hover:scale-110`}
+                                                        aria-hidden="true"
                                                     />
                                                 ))}
                                             </div>
-                                            <p className="mt-2 text-gray-600">
+                                            <p className="mt-4 text-gray-700 text-base leading-relaxed">
                                                 {review.comment}
                                             </p>
                                         </div>
