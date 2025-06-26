@@ -4,6 +4,7 @@ import { PlusIcon, PencilIcon, TrashIcon, StarIcon, XIcon } from "lucide-react";
 import AdminLayout from "../Layout";
 import api from "@/lib/api";
 import { AppHook } from "@/context/AppProvider";
+import { toast } from "sonner";
 
 interface Activity {
     id: number;
@@ -319,6 +320,7 @@ const AdminDestinations = () => {
                 )
             );
             setIsDeleteModalOpen(false);
+            toast.success("Destination Deleted Successfully");
         } catch (err: any) {
             const errorMessage =
                 err.response?.data?.message ||
@@ -496,9 +498,7 @@ const AdminDestinations = () => {
                                                                       </span>
                                                                       {act.image && (
                                                                           <img
-                                                                              src={
-                                                                                  act.image
-                                                                              }
+                                                                              src={`http://localhost:8000/storage/${act.image}`}
                                                                               alt={
                                                                                   act.name
                                                                               }
@@ -746,12 +746,12 @@ const AdminDestinations = () => {
             )}
             {isEditModalOpen && currentDestination && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                    className="fixed inset-0 z-50 flex items-center justify-center"
                     onClick={() => setIsEditModalOpen(false)}
                 >
                     <div
                         ref={editModalRef}
-                        className="relative bg-white rounded-lg px-4 pt-5 pb-4 shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full sm:p-6"
+                        className="relative bg-white rounded-xl p-8 shadow-2xl transform transition-all max-w-lg w-full mx-4 sm:mx-0 max-h-[90vh] overflow-y-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="mt-3 sm:mt-0 sm:text-left">
@@ -955,7 +955,7 @@ const AdminDestinations = () => {
             )}
             {isDeleteModalOpen && currentDestination && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+                    className="fixed inset-0 z-50 flex items-center justify-center  shadow:lg"
                     onClick={() => setIsDeleteModalOpen(false)}
                 >
                     <div

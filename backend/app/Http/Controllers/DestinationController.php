@@ -26,35 +26,48 @@ class DestinationController extends Controller
             'name' => 'required|string',
             'description' => 'required|string',
             'amount' => 'required|integer',
-            'image' => 'nullable|max:2048',
+            'image' => 'nullable|image|max:2048',
             'activities' => 'nullable|array',
             'activities.*.name' => 'required|string',
+            'activities.*.image' => 'nullable|image|max:2048',
             'user_id' => 'required|exists:users,id',
         ]);
 
-        $data = $validated;
-        // $data['user_id'] = Auth::id();
-
         // Handle destination image
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('destinations', 'public');
+            $validated['image'] = $request->file('image')->store('destinations', 'public');
         }
 
-        // Create destination
-        $destination = Destination::create($data);
+        // Create the destination
+        $destination = Destination::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+            'amount' => $validated['amount'],
+            'image' => $validated['image'] ?? null,
+            'user_id' => $validated['user_id'],
+        ]);
 
-        // Create activities if provided
-        if (!empty($validated['activities'])) {
-            foreach ($validated['activities'] as $activityData) {
-                // dd($activityData);
-                $activityData['destination_id'] = $destination->id;
-                Activity::create($activityData);
+        // Handle dynamic activities
+        if ($request->has('activities') && is_array($request->activities)) {
+            foreach ($request->activities as $index => $activityInput) {
+                // Manually extract each activity from the request
+                $activity = [
+                    'name' => $activityInput['name'],
+                    'destination_id' => $destination->id,
+                ];
+
+                // Handle activity image upload
+                if (isset($activityInput['image']) && $activityInput['image'] instanceof \Illuminate\Http\UploadedFile) {
+                    $activity['image'] = $activityInput['image']->store('activities', 'public');
+                }
+
+                Activity::create($activity);
             }
         }
 
-
-        return response()->json($destination, 201);
+        return response()->json($destination->load('activities'), 201);
     }
+
 
 
     public function show($id): JsonResponse
